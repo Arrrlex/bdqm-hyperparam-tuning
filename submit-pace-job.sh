@@ -1,5 +1,5 @@
 #PBS -N train-amptorch-model
-#PBS -l nodes=1:ppn=4:gpus=1
+#PBS -l nodes=1:ppn=1:gpus=1
 #PBS -l mem=2gb
 #PBS -l walltime=00:20:00
 #PBS -q pace-ice-gpu

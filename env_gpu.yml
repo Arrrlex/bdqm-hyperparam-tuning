@@ -8,7 +8,7 @@ dependencies:
   - matplotlib=3.3*
   - pip
   - pre-commit=2.2*
-  - python=3.7.*
+  - python=3.8.*
   - pytorch=1.9.0
   - tqdm=4.45.*
   - cudatoolkit=11.1
