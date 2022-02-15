@@ -1,3 +1,6 @@
+"""
+Script to be used with the amptorch branch https://github.com/medford-group/amptorch/tree/BDQM_VIP_2022Feb
+"""
 import numpy as np
 import torch
 from ase import Atoms
@@ -9,8 +12,13 @@ from ase.build import molecule
 from amptorch.ase_utils import AMPtorch
 from amptorch.trainer import AtomsTrainer
 
+from pathlib import Path
+
+hpopt_root = Path(__file__).resolve().parents[1]
+amptorch_root = hpopt_root.parent / "amptorch"
+
 # read all images from the trajectory
-training = ase.io.read("water_2d.traj", index=":")
+training = ase.io.read(hpopt_root / "data/water_2d.traj", index=":")
 
 # define sigmas
 nsigmas = 10
@@ -37,8 +45,8 @@ MCSHs = MCSHs_dict[MCSHs_index] # MCSHs is now just the order of MCSHs.
 GMP = {
     "MCSHs": MCSHs,
     "atom_gaussians": {
-        "H": "./valence_gaussians/H_pseudodensity_2.g",
-        "O": "./valence_gaussians/O_pseudodensity_4.g",
+        "H": str(amptorch_root / "examples/GMP/valence_gaussians/H_pseudodensity_2.g"),
+        "O": str(amptorch_root / "examples/GMP/valence_gaussians/O_pseudodensity_4.g"),
     },
     "cutoff": 12.0,
     "solid_harmonics": True,
