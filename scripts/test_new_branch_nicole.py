@@ -17,6 +17,9 @@ from pathlib import Path
 hpopt_root = Path(__file__).resolve().parents[1]
 amptorch_root = hpopt_root.parent / "amptorch"
 
+num_gpus = 1 if torch.cuda.is_available() else 0
+print(f"Running with {num_gpus} gpus")
+
 # read all images from the trajectory
 training = ase.io.read(hpopt_root / "data/water_2d.traj", index=":")
 
@@ -64,6 +67,7 @@ config = {
         "activation":torch.nn.Tanh,
     },
     "optim": {
+        "gpus": num_gpus,
         "force_coefficient": 0.01,
         "lr": 1e-3,
         "batch_size": 16,
