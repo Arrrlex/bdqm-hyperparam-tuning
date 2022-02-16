@@ -1,5 +1,6 @@
 name: bdqm-hpopt
 channels:
+  - pyg
   - pytorch
   - conda-forge
   - defaults
@@ -11,16 +12,12 @@ dependencies:
   - tqdm=4.45.*
   - cudatoolkit=10.2
   - h5py
+  - pyg
   - pip:
     - --find-links https://data.pyg.org/whl/torch-1.8.0+cu102.html
     - cffi
     - wandb
     - lmdb==1.0.0
     - skorch==0.10.*
-    - torch-scatter
-    - torch-sparse
     - torch-cluster
     - torch-spline-conv
-    - torch-geometric
-    - ipykernel
-    - ipywidgets
