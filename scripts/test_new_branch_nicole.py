@@ -63,7 +63,7 @@ config = {
         "get_forces": True,
         "num_layers": 3,
         "num_nodes": 10,
-        "batchnorm": True,
+        "batchnorm": False,
         "activation":torch.nn.Tanh,
     },
     "optim": {
