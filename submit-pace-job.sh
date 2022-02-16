@@ -15,6 +15,4 @@ cat $PBS_NODEFILE
 module purge
 module load gcc/10.1.0
 module load anaconda3/2021.05
-# conda run -n bdqm-hpopt pip install git+https://github.com/medford-group/amptorch.git@BDQM_VIP_2022Feb
-# conda run -n bdqm-hpopt pip install git+https://github.com/ulissigroup/amptorch.git@MCSH_paper1_lmdb
 conda run -n bdqm-hpopt python scripts/test_new_branch_nicole.py
