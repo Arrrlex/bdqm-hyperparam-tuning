@@ -5,7 +5,6 @@
 #PBS -q pace-ice-gpu
 #PBS -k oe
 #PBS -m abe
-#PBS -M amckenzie9@gatech.edu
 
 cd $PBS_O_WORKDIR
 echo "Started on `/bin/hostname`"
