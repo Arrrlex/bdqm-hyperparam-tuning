@@ -15,11 +15,14 @@ y_test = np.array([img.get_potential_energy() for img in test_imgs])
 
 
 # To investigate:
+#  - Get this simple pipeline working with optuna
 #  - Use valid set instead of test set for hyperparam tuning
-#  - Use features already pre-prepared for prediction, rather than re-creating features each time
+#  - Use features already pre-prepared for prediction, rather than re-creating features
+#    each time
 #  - Compare full cache vs no cache, do we notice a difference?
-# To do:
-# - Get this simple pipeline working with optuna
+#  - Try running on GPU
+#  - Try parallelizing
+#  - Try dockerizing?
 
 def calc_loss(**params):
     model_params = ["num_layers", "num_nodes", "batchnorm"]
