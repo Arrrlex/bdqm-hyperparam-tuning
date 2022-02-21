@@ -15,10 +15,15 @@ from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 
-from utils import bdqm_hpopt_path, get_path_to_gaussian, get_all_elements, GMPTransformer, ScalerTransformer
+from utils import (
+    bdqm_hpopt_path,
+    get_path_to_gaussian,
+    get_all_elements,
+    GMPTransformer,
+    ScalerTransformer,
+    split_data,
+)
 
-
-rng = np.random.default_rng()
 
 def mk_feature_pipeline(
     train_imgs: Sequence
@@ -108,30 +113,6 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
 
     db.sync()
     db.close()
-
-def split_data(data: Sequence, valid_pct: float):
-    """
-    Split data into train & validation sets.
-
-    `valid_pct` sets how big the validation set is; setting `valid_pct=0.1` will
-    mean that 10% of the data goes into the valid dataset.
-
-    Args:
-        data: the data to split
-        valid_pct: a float between 0 and 1, size of the validation split
-    Returns:
-        train_data: the training split
-        valid_data: the validation split
-    """
-    n = len(data)
-    indices = np.arange(n)
-    n_valid = int(round(valid_pct * n))
-    valid_indices = rng.choice(indices, size=n_valid, replace=False)
-    train_indices = np.setdiff1d(indices, valid_indices)
-
-    train_data = [data[i] for i in train_indices]
-    valid_data = [data[i] for i in valid_indices]
-    return train_data, valid_data
 
 
 def main(data_dir: Path, train_fname: str, test_fname: str) -> None:
