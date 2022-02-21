@@ -51,9 +51,9 @@ class GMPTransformer:
             "cutoff": cutoff,
         }
 
-        descriptor = GMP(MCSHs=MCSHs, elements=elements)
+        self.descriptor = GMP(MCSHs=MCSHs, elements=elements)
 
-        self.a2d = AtomsToData(descriptor=descriptor, **a2d_kwargs)
+        self.a2d = AtomsToData(descriptor=self.descriptor, **a2d_kwargs)
 
     def fit(self, X, y=None):
         return self
@@ -140,30 +140,33 @@ def featurize(data_dir: Path, train_fname: str, test_fname: str):
     print("\nTransforming test data")
     test_feats = preprocess_pipeline.transform(test_images)
 
-    return train_feats, test_feats, params, preprocess_pipeline
+    return train_feats, test_feats, preprocess_pipeline
 
 
-def save_to_lmdb(feats, params, pipeline, lmdb_path):
+def save_to_lmdb(feats, pipeline, lmdb_path):
     """
     Save the features and pipeline information to the lmdb file.
-
-    The following key-values are saved:
-     - "row_{i}", the i-th row of features
-     - "params", the params dict of the preprocess pipeline
-     - "feature_scaler", the FeatureScaler object
-     - "target_scaler", the TargetScaler object
 
     Args:
         feats: the features to save
         params: the parameters of the preprocess pipeline
         pipeline: the preprocess pipeline
     """
+    gmp = pipeline.named_steps["GMP"].descriptor
+    descriptor_setup = (
+        "gmp",
+        gmp.MCSHs,
+        None,
+        gmp.elements,
+    )
+
     to_save = {
-        **{f"row_{i}": f for i, f in enumerate(feats)},
+        **{f"{i}": f for i, f in enumerate(feats)},
         **{
-            "params": params,
             "feature_scaler": pipeline.named_steps["FeatureScaler"].scaler,
             "target_scaler": pipeline.named_steps["TargetScaler"].scaler,
+            "length": len(feats),
+            "descriptor_setup": descriptor_setup
         },
     }
 
@@ -176,7 +179,7 @@ def save_to_lmdb(feats, params, pipeline, lmdb_path):
     )
 
     for key, val in tqdm(to_save.items(), desc="Writing data to LMDB"):
-        key = str(key).encode("ascii")
+        key = key.encode("ascii")
         val = pickle.dumps(val, protocol=-1)
         txn = db.begin(write=True)
         txn.put(key, val)
@@ -198,12 +201,12 @@ def main(data_dir, train_fname, test_fname):
         print(f"{test_lmdb_path} already exists, aborting")
         return
 
-    train_feats, test_feats, params, pipeline = featurize(
+    train_feats, test_feats, pipeline = featurize(
         data_dir, train_fname, test_fname
     )
 
-    save_to_lmdb(train_feats, params, pipeline, train_lmdb_path)
-    save_to_lmdb(test_feats, params, pipeline, test_lmdb_path)
+    save_to_lmdb(train_feats, pipeline, train_lmdb_path)
+    save_to_lmdb(test_feats, pipeline, test_lmdb_path)
 
 
 if __name__ == "__main__":
