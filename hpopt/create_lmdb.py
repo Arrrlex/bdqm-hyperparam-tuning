@@ -6,7 +6,7 @@ This lets us save time during hyperparameter optimization.
 
 import pickle
 from pathlib import Path
-from typing import Iterable, List
+from typing import Any, Dict, Iterable, List
 
 import lmdb
 from amptorch.descriptor.GMP import GMP
@@ -104,7 +104,7 @@ def featurize(data_dir: Path, train_fname: str, test_fname: str):
     elements = get_all_elements(train_images)
     atom_gaussians = {el: get_path_to_gaussian(el) for el in elements}
 
-    params = {
+    params: Dict[str, Dict[str, Any]] = {
         "GMP": {
             "elements": elements,
             "atom_gaussians": atom_gaussians,
