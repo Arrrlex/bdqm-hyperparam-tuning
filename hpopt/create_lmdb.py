@@ -5,10 +5,12 @@ This lets us save time during hyperparameter optimization.
 """
 
 import pickle
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Tuple
 
 import lmdb
+import numpy as np
 from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData, FeatureScaler, TargetScaler
 from ase import Atom
@@ -16,7 +18,6 @@ from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
-import numpy as np
 
 # Path to data directory (../data)
 bdqm_hpopt_path = Path(__file__).resolve().parents[1]
@@ -35,24 +36,33 @@ def get_all_elements(traj: Iterable[Iterable[Atom]]) -> List[str]:
     return list({atom.symbol for image in traj for atom in image})
 
 
-def gen_mcshs(sigmas, n):
+MCSH = Dict[str, Dict[str, Iterable[float]]]
+
+
+def gen_mcshs(sigmas: Iterable[float], n: int) -> MCSH:
     return {str(i): {"orders": list(range(i + 1)), "sigmas": sigmas} for i in range(n)}
 
 
 class GMPTransformer:
     """Scikit-learn compatible wrapper around GMP featurizing code."""
 
-    def __init__(self, sigmas, elements, atom_gaussians, cutoff, **a2d_kwargs):
+    def __init__(
+        self,
+        sigmas: Sequence[float],
+        atom_gaussians: Dict[str, Path],
+        cutoff: float,
+        **a2d_kwargs,
+    ):
         MCSHs = {
             "MCSHs": gen_mcshs(sigmas, 3),
             "atom_gaussians": atom_gaussians,
             "cutoff": cutoff,
         }
-        self.descriptor = GMP(MCSHs=MCSHs, elements=elements)
+        self.descriptor = GMP(MCSHs=MCSHs, elements=list(atom_gaussians.keys()))
         self.a2d = AtomsToData(descriptor=self.descriptor, **a2d_kwargs)
 
     @property
-    def setup(self):
+    def setup(self) -> Tuple[str, MCSH, Any, Sequence[str]]:
         return ("gmp", self.descriptor.MCSHs, None, self.descriptor.elements)
 
     def fit(self, X, y=None):
@@ -84,7 +94,9 @@ class ScalerTransformer:
         return self.scaler.norm(X)
 
 
-def featurize(data_dir: Path, train_fname: str, test_fname: str):
+def featurize(
+    data_dir: Path, train_fname: str, test_fname: str
+) -> Tuple[Sequence, Sequence, Pipeline]:
     """
     Compute scaled feature values for train and test data.
 
@@ -108,7 +120,6 @@ def featurize(data_dir: Path, train_fname: str, test_fname: str):
             (
                 "GMP",
                 GMPTransformer(
-                    elements=elements,
                     atom_gaussians=atom_gaussians,
                     # sigmas=[0.02, 0.2, 0.4, 0.69, 1.1, 1.66, 2.66, 4.4],
                     sigmas=np.exp(np.linspace(-2, 1.5, 8)),
@@ -145,7 +156,7 @@ def featurize(data_dir: Path, train_fname: str, test_fname: str):
     return train_feats, test_feats, preprocess_pipeline
 
 
-def save_to_lmdb(feats, pipeline, lmdb_path):
+def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
     """
     Save the features and pipeline information to the lmdb file.
 
@@ -165,8 +176,6 @@ def save_to_lmdb(feats, pipeline, lmdb_path):
         },
     }
 
-    to_save = {k.encode("ascii"): v for k, v in to_save.items()}
-
     db = lmdb.open(
         str(lmdb_path),
         map_size=64_393_216 * 2,
@@ -177,14 +186,14 @@ def save_to_lmdb(feats, pipeline, lmdb_path):
 
     for key, val in tqdm(to_save.items(), desc="Writing data to LMDB"):
         txn = db.begin(write=True)
-        txn.put(key, pickle.dumps(val, protocol=-1))
+        txn.put(key.encode("ascii"), pickle.dumps(val, protocol=-1))
         txn.commit()
 
     db.sync()
     db.close()
 
 
-def main(data_dir, train_fname, test_fname):
+def main(data_dir: Path, train_fname: str, test_fname: str) -> None:
     """Calculate features and save to lmdb."""
     train_lmdb_path = (data_dir / train_fname).with_suffix(".lmdb")
     test_lmdb_path = (data_dir / test_fname).with_suffix(".lmdb")
