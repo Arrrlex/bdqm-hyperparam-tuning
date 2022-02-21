@@ -1,5 +1,8 @@
 **/checkpoints/*
 **/processed/*
+data/normalizers.pt
+data/*.lmdb
+data/*.lmdb-lock
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
@@ -159,4 +162,3 @@ cython_debug/
 #.idea/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
-
