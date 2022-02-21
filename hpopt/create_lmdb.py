@@ -16,14 +16,13 @@ from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
+import numpy as np
 
 # Path to data directory (../data)
 bdqm_hpopt_path = Path(__file__).resolve().parents[1]
 # Path to amptorch git repo (assumed to be ../../amptorch)
 amptorch_path = Path(__file__).resolve().parents[2] / "amptorch"
 
-
-# Utils
 
 def get_path_to_gaussian(element: str) -> Path:
     """Get path to gaussian file given element name."""
@@ -36,24 +35,25 @@ def get_all_elements(traj: Iterable[Iterable[Atom]]) -> List[str]:
     return list({atom.symbol for image in traj for atom in image})
 
 
+def gen_mcshs(sigmas, n):
+    return {str(i): {"orders": list(range(i + 1)), "sigmas": sigmas} for i in range(n)}
+
+
 class GMPTransformer:
     """Scikit-learn compatible wrapper around GMP featurizing code."""
 
     def __init__(self, sigmas, elements, atom_gaussians, cutoff, **a2d_kwargs):
         MCSHs = {
-            "MCSHs": {
-                "0": {"groups": [1], "sigmas": sigmas},
-                "1": {"groups": [1], "sigmas": sigmas},
-                "2": {"groups": [1, 2], "sigmas": sigmas},
-                "3": {"groups": [1, 2, 3], "sigmas": sigmas},
-            },
+            "MCSHs": gen_mcshs(sigmas, 3),
             "atom_gaussians": atom_gaussians,
             "cutoff": cutoff,
         }
-
         self.descriptor = GMP(MCSHs=MCSHs, elements=elements)
-
         self.a2d = AtomsToData(descriptor=self.descriptor, **a2d_kwargs)
+
+    @property
+    def setup(self):
+        return ("gmp", self.descriptor.MCSHs, None, self.descriptor.elements)
 
     def fit(self, X, y=None):
         return self
@@ -96,42 +96,44 @@ def featurize(data_dir: Path, train_fname: str, test_fname: str):
         params (dict): the parameters for the preprocess pipeline
         preprocess_pipeline (Pipeline): the actual pipeline object
     """
-    print(f"Loading {train_fname}")
+    print(f"Loading data")
     train_images = Trajectory(data_dir / train_fname)
-    print(f"Loading {test_fname}")
     test_images = Trajectory(data_dir / test_fname)
 
     elements = get_all_elements(train_images)
     atom_gaussians = {el: get_path_to_gaussian(el) for el in elements}
 
-    params: Dict[str, Dict[str, Any]] = {
-        "GMP": {
-            "elements": elements,
-            "atom_gaussians": atom_gaussians,
-            "sigmas": [0.02, 0.2, 0.4, 0.69, 1.1, 1.66, 2.66, 4.4],
-            "cutoff": 5,
-            "r_energy": True,
-            "r_forces": True,
-            "save_fps": False,
-            "fprimes": False,
-        },
-        "FeatureScaler": {
-            "forcetraining": False,
-            "scaling": {"type": "normalize", "range": (0, 1)},
-        },
-        "TargetScaler": {
-            "forcetraining": False,
-        },
-    }
-
     preprocess_pipeline = Pipeline(
         steps=[
-            ("GMP", GMPTransformer(**params["GMP"])),
+            (
+                "GMP",
+                GMPTransformer(
+                    elements=elements,
+                    atom_gaussians=atom_gaussians,
+                    # sigmas=[0.02, 0.2, 0.4, 0.69, 1.1, 1.66, 2.66, 4.4],
+                    sigmas=np.exp(np.linspace(-2, 1.5, 8)),
+                    cutoff=5,
+                    r_energy=True,
+                    r_forces=True,
+                    save_fps=False,
+                    fprimes=False,
+                ),
+            ),
             (
                 "FeatureScaler",
-                ScalerTransformer(FeatureScaler, **params["FeatureScaler"]),
+                ScalerTransformer(
+                    FeatureScaler,
+                    forcetraining=False,
+                    scaling={"type": "normalize", "range": (0, 1)},
+                ),
             ),
-            ("TargetScaler", ScalerTransformer(TargetScaler, **params["TargetScaler"])),
+            (
+                "TargetScaler",
+                ScalerTransformer(
+                    TargetScaler,
+                    forcetraining=False,
+                ),
+            ),
         ]
     )
 
@@ -152,23 +154,18 @@ def save_to_lmdb(feats, pipeline, lmdb_path):
         params: the parameters of the preprocess pipeline
         pipeline: the preprocess pipeline
     """
-    gmp = pipeline.named_steps["GMP"].descriptor
-    descriptor_setup = (
-        "gmp",
-        gmp.MCSHs,
-        None,
-        gmp.elements,
-    )
 
     to_save = {
-        **{f"{i}": f for i, f in enumerate(feats)},
+        **{str(i): f for i, f in enumerate(feats)},
         **{
+            "length": len(feats),
             "feature_scaler": pipeline.named_steps["FeatureScaler"].scaler,
             "target_scaler": pipeline.named_steps["TargetScaler"].scaler,
-            "length": len(feats),
-            "descriptor_setup": descriptor_setup
+            "descriptor_setup": pipeline.named_steps["GMP"].setup,
         },
     }
+
+    to_save = {k.encode("ascii"): v for k, v in to_save.items()}
 
     db = lmdb.open(
         str(lmdb_path),
@@ -179,10 +176,8 @@ def save_to_lmdb(feats, pipeline, lmdb_path):
     )
 
     for key, val in tqdm(to_save.items(), desc="Writing data to LMDB"):
-        key = key.encode("ascii")
-        val = pickle.dumps(val, protocol=-1)
         txn = db.begin(write=True)
-        txn.put(key, val)
+        txn.put(key, pickle.dumps(val, protocol=-1))
         txn.commit()
 
     db.sync()
@@ -194,16 +189,12 @@ def main(data_dir, train_fname, test_fname):
     train_lmdb_path = (data_dir / train_fname).with_suffix(".lmdb")
     test_lmdb_path = (data_dir / test_fname).with_suffix(".lmdb")
 
-    if train_lmdb_path.exists():
-        print(f"{train_lmdb_path} already exists, aborting")
-        return
-    if test_lmdb_path.exists():
-        print(f"{test_lmdb_path} already exists, aborting")
-        return
+    for path in [train_lmdb_path, test_lmdb_path]:
+        if path.exists():
+            print(f"{path} already exists, aborting")
+            return
 
-    train_feats, test_feats, pipeline = featurize(
-        data_dir, train_fname, test_fname
-    )
+    train_feats, test_feats, pipeline = featurize(data_dir, train_fname, test_fname)
 
     save_to_lmdb(train_feats, pipeline, train_lmdb_path)
     save_to_lmdb(test_feats, pipeline, test_lmdb_path)
