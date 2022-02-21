@@ -18,28 +18,25 @@ from tqdm import tqdm
 from utils import bdqm_hpopt_path, get_path_to_gaussian, get_all_elements, GMPTransformer, ScalerTransformer
 
 
-def featurize(
-    data_dir: Path, train_fname: str, test_fname: str
-) -> Tuple[Sequence, Sequence, Pipeline]:
+rng = np.random.default_rng()
+
+def mk_feature_pipeline(
+    train_imgs: Sequence
+) -> Tuple[Sequence, Pipeline]:
     """
-    Compute scaled feature values for train and test data.
+    Compute scaled feature values for train data
 
-    The train and test live in the `data_dir` directory.
-
+    Args:
+        train_imgs (Sequence): the training data
     Returns:
         train_feats (list): the features for the train data
-        test_feats (list): the features for the test data
-        params (dict): the parameters for the preprocess pipeline
         preprocess_pipeline (Pipeline): the actual pipeline object
     """
-    print(f"Loading data")
-    train_images = Trajectory(data_dir / train_fname)
-    test_images = Trajectory(data_dir / test_fname)
 
-    elements = get_all_elements(train_images)
+    elements = get_all_elements(train_imgs)
     atom_gaussians = {el: get_path_to_gaussian(el) for el in elements}
 
-    preprocess_pipeline = Pipeline(
+    featurizer_pipeline = Pipeline(
         steps=[
             (
                 "GMP",
@@ -72,12 +69,8 @@ def featurize(
         ]
     )
 
-    print("\nFitting and transforming train data")
-    train_feats = preprocess_pipeline.fit_transform(train_images)
-    print("\nTransforming test data")
-    test_feats = preprocess_pipeline.transform(test_images)
-
-    return train_feats, test_feats, preprocess_pipeline
+    train_feats = featurizer_pipeline.fit_transform(train_imgs)
+    return train_feats, featurizer_pipeline
 
 
 def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
@@ -116,21 +109,55 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
     db.sync()
     db.close()
 
+def split_data(data: Sequence, valid_pct: float):
+    """
+    Split data into train & validation sets.
+
+    `valid_pct` sets how big the validation set is; setting `valid_pct=0.1` will
+    mean that 10% of the data goes into the valid dataset.
+
+    Args:
+        data: the data to split
+        valid_pct: a float between 0 and 1, size of the validation split
+    Returns:
+        train_data: the training split
+        valid_data: the validation split
+    """
+    n = len(data)
+    indices = np.arange(n)
+    n_valid = int(round(valid_pct * n))
+    valid_indices = rng.choice(indices, size=n_valid, replace=False)
+    train_indices = np.setdiff1d(indices, valid_indices)
+
+    train_data = [data[i] for i in train_indices]
+    valid_data = [data[i] for i in valid_indices]
+    return train_data, valid_data
+
 
 def main(data_dir: Path, train_fname: str, test_fname: str) -> None:
-    """Calculate features and save to lmdb."""
-    train_lmdb_path = (data_dir / train_fname).with_suffix(".lmdb")
-    test_lmdb_path = (data_dir / test_fname).with_suffix(".lmdb")
+    """Split into train, valid and test, calculate features and save to lmdb."""
+    train_lmdb_path = data_dir / "train.lmdb"
+    test_lmdb_path = data_dir / "test.lmdb"
+    valid_lmdb_path = data_dir / "valid.lmdb"
 
-    for path in [train_lmdb_path, test_lmdb_path]:
+    for path in [train_lmdb_path, test_lmdb_path, valid_lmdb_path]:
         if path.exists():
             print(f"{path} already exists, aborting")
             return
 
-    train_feats, test_feats, pipeline = featurize(data_dir, train_fname, test_fname)
+    print("Loading and splitting data...")
+    train_imgs, valid_imgs = split_data(Trajectory(data_dir / train_fname), valid_pct=0.1)
+    test_imgs = Trajectory(data_dir / test_fname)
 
-    save_to_lmdb(train_feats, pipeline, train_lmdb_path)
-    save_to_lmdb(test_feats, pipeline, test_lmdb_path)
+    print("\nFitting pipeline & computing features...")
+    train_feats, featurizer = mk_feature_pipeline(train_imgs)
+    test_feats = featurizer.transform(test_imgs)
+    valid_feats = featurizer.transform(valid_imgs)
+
+    print("\nSaving data...")
+    save_to_lmdb(train_feats, featurizer, train_lmdb_path)
+    save_to_lmdb(test_feats, featurizer, test_lmdb_path)
+    save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)
 
 
 if __name__ == "__main__":
