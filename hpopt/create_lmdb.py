@@ -45,8 +45,8 @@ def featurize(
                 "GMP",
                 GMPTransformer(
                     atom_gaussians=atom_gaussians,
-                    sigmas=[0.02, 0.2, 0.4, 0.69, 1.1, 1.66, 2.66, 4.4],
-                    # sigmas=np.exp(np.linspace(-2, 1.5, 8)),
+                    # sigmas=[0.02, 0.2, 0.4, 0.69, 1.1, 1.66, 2.66, 4.4],
+                    sigmas=np.exp(np.linspace(-2, 1.5, 8)),
                     cutoff=5,
                     r_energy=True,
                     r_forces=True,

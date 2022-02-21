@@ -5,6 +5,7 @@ from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData
 from ase import Atom
 from tqdm.contrib import tenumerate
+import numpy as np
 
 # Path to data directory (../data)
 bdqm_hpopt_path = Path(__file__).resolve().parents[1]
@@ -27,7 +28,10 @@ MCSH = Dict[str, Dict[str, Iterable[float]]]
 
 
 def gen_mcshs(sigmas: Iterable[float], n: int) -> MCSH:
-    return {str(i): {"groups": list(range(i + 1)), "sigmas": sigmas} for i in range(n)}
+    def mcsh(i):
+        groups = [1] if i == 0 else list(np.arange(i) + 1)
+        return {"groups": groups, "sigmas": sigmas}
+    return {str(i): mcsh(i) for i in range(n)}
 
 
 class GMPTransformer:
