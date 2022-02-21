@@ -1,50 +1,54 @@
-import pickle
-import lmdb
-from ase.io import Trajectory
+"""
+Script to pre-generate features and save in lmdb format.
 
+This lets us save time during hyperparameter optimization.
+"""
+
+import pickle
+from pathlib import Path
+from typing import Iterable, List
+
+import lmdb
+from amptorch.descriptor.GMP import GMP
+from amptorch.preprocessing import AtomsToData, FeatureScaler, TargetScaler
 from ase import Atom
+from ase.io import Trajectory
+from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
-from amptorch.preprocessing import AtomsToData, FeatureScaler, TargetScaler
-from amptorch.descriptor.GMP import GMP
-from sklearn.pipeline import Pipeline
-
-from pathlib import Path
-
-from typing import List, Iterable
 
 # Path to data directory (../data)
 bdqm_hpopt_path = Path(__file__).resolve().parents[1]
 # Path to amptorch git repo (assumed to be ../../amptorch)
-amptorch_path = Path(__file__).resolve().parents[2] / 'amptorch'
+amptorch_path = Path(__file__).resolve().parents[2] / "amptorch"
+
 
 # Utils
+
 def get_path_to_gaussian(element: str) -> Path:
-    """
-    Get path to gaussian file given element name.
-    """
+    """Get path to gaussian file given element name."""
     gaussians_path = amptorch_path / "examples/GMP/valence_gaussians"
     return next(gaussians_path.glob(f"{element}_*"))
 
+
 def get_all_elements(traj: Iterable[Iterable[Atom]]) -> List[str]:
-    """
-    Given iterable of images, get list of all elements present.
-    """
+    """Get list of elements given iterable of images."""
     return list({atom.symbol for image in traj for atom in image})
+
 
 class GMPTransformer:
     """Scikit-learn compatible wrapper around GMP featurizing code."""
 
     def __init__(self, sigmas, elements, atom_gaussians, cutoff, **a2d_kwargs):
         MCSHs = {
-            'MCSHs': {
-                '0': {'groups': [1], 'sigmas': sigmas},
-                '1': {'groups': [1], 'sigmas': sigmas},
-                '2': {'groups': [1, 2], 'sigmas': sigmas},
-                '3': {'groups': [1, 2, 3], 'sigmas': sigmas},
+            "MCSHs": {
+                "0": {"groups": [1], "sigmas": sigmas},
+                "1": {"groups": [1], "sigmas": sigmas},
+                "2": {"groups": [1, 2], "sigmas": sigmas},
+                "3": {"groups": [1, 2, 3], "sigmas": sigmas},
             },
-            'atom_gaussians': atom_gaussians,
-            'cutoff': cutoff,
+            "atom_gaussians": atom_gaussians,
+            "cutoff": cutoff,
         }
 
         descriptor = GMP(MCSHs=MCSHs, elements=elements)
@@ -58,12 +62,14 @@ class GMPTransformer:
         n = len(X)
         return [
             self.a2d.convert(img, idx=idx)
-            for idx, img in tenumerate(X, desc='Calculating descriptors', total=n, unit=' images')
+            for idx, img in tenumerate(
+                X, desc="Calculating descriptors", total=n, unit=" images"
+            )
         ]
 
 
 class ScalerTransformer:
-    """Scikit-learn compatible wrapper around FeatureScaler and TargetScaler."""
+    """Scikit-learn compatible wrapper for FeatureScaler and TargetScaler."""
 
     def __init__(self, cls, *args, **kwargs):
         self._cls = cls
@@ -111,22 +117,27 @@ def featurize(data_dir: Path, train_fname: str, test_fname: str):
         },
         "FeatureScaler": {
             "forcetraining": False,
-            "scaling": {"type": "normalize", 'range': (0, 1)},
+            "scaling": {"type": "normalize", "range": (0, 1)},
         },
         "TargetScaler": {
             "forcetraining": False,
         },
     }
 
-    preprocess_pipeline = Pipeline(steps=[
-        ('GMP', GMPTransformer(**params["GMP"])),
-        ('FeatureScaler', ScalerTransformer(FeatureScaler, **params["FeatureScaler"])),
-        ('TargetScaler', ScalerTransformer(TargetScaler, **params["TargetScaler"])),
-    ])
+    preprocess_pipeline = Pipeline(
+        steps=[
+            ("GMP", GMPTransformer(**params["GMP"])),
+            (
+                "FeatureScaler",
+                ScalerTransformer(FeatureScaler, **params["FeatureScaler"]),
+            ),
+            ("TargetScaler", ScalerTransformer(TargetScaler, **params["TargetScaler"])),
+        ]
+    )
 
-    print(f"\nFitting and transforming train data")
+    print("\nFitting and transforming train data")
     train_feats = preprocess_pipeline.fit_transform(train_images)
-    print(f"\nTransforming test data")
+    print("\nTransforming test data")
     test_feats = preprocess_pipeline.transform(test_images)
 
     return train_feats, test_feats, params, preprocess_pipeline
@@ -148,7 +159,7 @@ def save_to_lmdb(feats, params, pipeline, lmdb_path):
         pipeline: the preprocess pipeline
     """
     to_save = {
-        **{f"row_{i}": f for i,f in enumerate(feats)},
+        **{f"row_{i}": f for i, f in enumerate(feats)},
         **{
             "params": params,
             "feature_scaler": pipeline.named_steps["FeatureScaler"].scaler,
@@ -174,10 +185,9 @@ def save_to_lmdb(feats, params, pipeline, lmdb_path):
     db.sync()
     db.close()
 
+
 def main(data_dir, train_fname, test_fname):
-    """
-    Calculate features and save to lmdb.
-    """
+    """Calculate features and save to lmdb."""
     train_lmdb_path = (data_dir / train_fname).with_suffix(".lmdb")
     test_lmdb_path = (data_dir / test_fname).with_suffix(".lmdb")
 
@@ -188,12 +198,15 @@ def main(data_dir, train_fname, test_fname):
         print(f"{test_lmdb_path} already exists, aborting")
         return
 
-    train_feats, test_feats, params, pipeline = featurize(data_dir, train_fname, test_fname)
+    train_feats, test_feats, params, pipeline = featurize(
+        data_dir, train_fname, test_fname
+    )
 
     save_to_lmdb(train_feats, params, pipeline, train_lmdb_path)
     save_to_lmdb(test_feats, params, pipeline, test_lmdb_path)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(
         data_dir=bdqm_hpopt_path / "data",
         train_fname="oc20_3k_train.traj",
