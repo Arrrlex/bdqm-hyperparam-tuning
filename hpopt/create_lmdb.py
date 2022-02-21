@@ -88,13 +88,18 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
         pipeline: the preprocess pipeline
     """
 
+    feature_scaler = pipeline.named_steps["FeatureScaler"]
+    target_scaler = pipeline.named_steps["TargetScaler"]
+    gmp = pipeline.named_steps["GMP"]
+
     to_save = {
         **{str(i): f for i, f in enumerate(feats)},
         **{
             "length": len(feats),
-            "feature_scaler": pipeline.named_steps["FeatureScaler"].scaler,
-            "target_scaler": pipeline.named_steps["TargetScaler"].scaler,
-            "descriptor_setup": pipeline.named_steps["GMP"].setup,
+            "feature_scaler": feature_scaler.scaler,
+            "target_scaler": target_scaler.scaler,
+            "descriptor_setup": gmp.setup,
+            "elements": gmp.elements,
         },
     }
 
@@ -132,8 +137,8 @@ def main(data_dir: Path, train_fname: str, test_fname: str) -> None:
 
     print("\nFitting pipeline & computing features...")
     train_feats, featurizer = mk_feature_pipeline(train_imgs)
-    test_feats = featurizer.transform(test_imgs)
     valid_feats = featurizer.transform(valid_imgs)
+    test_feats = featurizer.transform(test_imgs)
 
     print("\nSaving data...")
     save_to_lmdb(train_feats, featurizer, train_lmdb_path)

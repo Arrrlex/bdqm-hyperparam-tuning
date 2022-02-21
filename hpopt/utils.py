@@ -52,12 +52,14 @@ class GMPTransformer:
             "atom_gaussians": atom_gaussians,
             "cutoff": cutoff,
         }
-        self.descriptor = GMP(MCSHs=MCSHs, elements=list(atom_gaussians.keys()))
+        elements = list(atom_gaussians.keys())
+        self.descriptor = GMP(MCSHs=MCSHs, elements=elements)
         self.a2d = AtomsToData(descriptor=self.descriptor, **a2d_kwargs)
+        self.setup = ("gmp", MCSHs, {"cutoff": cutoff}, elements)
 
     @property
-    def setup(self) -> Tuple[str, MCSH, Any, Sequence[str]]:
-        return ("gmp", self.descriptor.MCSHs, None, self.descriptor.elements)
+    def elements(self):
+        return self.descriptor.elements
 
     def fit(self, X, y=None):
         return self
