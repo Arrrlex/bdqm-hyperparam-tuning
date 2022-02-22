@@ -8,7 +8,7 @@ from amptorch.dataset_lmdb import get_lmdb_dataset
 
 from utils import bdqm_hpopt_path
 
-gpus = int(torch.cuda.is_available())
+gpus = min(1, torch.cuda.device_count())
 
 data_path = bdqm_hpopt_path / 'data'
 
@@ -84,10 +84,12 @@ def objective(trial):
     return np.mean(np.abs(y_pred - y_valid))
 
 def run_hyperparameter_optimization(n_trials):
-    study = optuna.create_study()
+    username = '...'
+    password = '...'
+    study = optuna.load_study(study_name="distributed-amptorch-tuning", storage=f"mysql+pymysql://{username}:{password}@localhost/hpopt")
     study.optimize(objective, n_trials=n_trials)
 
     print(study.best_params)
 
 if __name__ == '__main__':
-    run_hyperparameter_optimization(5)
+    run_hyperparameter_optimization(20)
