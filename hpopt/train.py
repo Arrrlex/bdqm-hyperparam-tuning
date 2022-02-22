@@ -23,7 +23,7 @@ valid_feats = get_lmdb_dataset([str(data_path / 'valid.lmdb')], cache_type="full
 #  - [x] Use features already pre-prepared for prediction, rather than re-creating features
 #    each time
 #  - [x] Compare full cache vs no cache, do we notice a difference?
-#  - [ ] Try running on GPU
+#  - [x] Try running on GPU
 #  - [ ] Try parallelizing
 #  - [ ] Try dockerizing?
 #  - [ ] Incorporate pruning using skorch integration
