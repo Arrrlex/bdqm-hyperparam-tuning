@@ -21,3 +21,4 @@ dependencies:
     - skorch==0.10.*
     - torch-cluster
     - torch-spline-conv
+    - optuna
