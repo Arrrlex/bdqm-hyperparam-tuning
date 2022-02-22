@@ -26,9 +26,11 @@ valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full
 #    each time
 #  - [x] Compare full cache vs no cache, do we notice a difference?
 #  - [x] Try running on GPU
-#  - [ ] Try parallelizing
+#  - [x] Try parallelizing
+#  - [ ] Try parallelizing with GNU Parallel (https://docs.pace.gatech.edu/software/multiparallel/)
 #  - [ ] Try dockerizing?
 #  - [ ] Incorporate pruning using skorch integration
+#  - [ ] Try fixing torch.DoubleTensor
 
 
 def objective(trial):
