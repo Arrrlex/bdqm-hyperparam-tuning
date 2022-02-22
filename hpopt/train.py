@@ -4,6 +4,7 @@ from amptorch.trainer import AtomsTrainer
 import numpy as np
 import optuna
 from torch import nn
+from amptorch.dataset_lmdb import get_lmdb_dataset
 
 from utils import bdqm_hpopt_path
 
@@ -13,18 +14,19 @@ data_path = bdqm_hpopt_path / 'data'
 
 test_imgs = Trajectory(data_path / "oc20_300_test.traj")
 y_test = np.array([img.get_potential_energy() for img in test_imgs])
+test_feats = get_lmdb_dataset([str(data_path / 'test.lmdb')], cache_type="full")
 
 
 # To investigate:
-#  - Get this simple pipeline working with optuna
-#  - Use valid set instead of test set for hyperparam tuning
-#  - Use features already pre-prepared for prediction, rather than re-creating features
+#  - [x] Get this simple pipeline working with optuna
+#  - [ ] Use valid set instead of test set for hyperparam tuning
+#  - [ ] Use features already pre-prepared for prediction, rather than re-creating features
 #    each time
-#  - Compare full cache vs no cache, do we notice a difference?
-#  - Try running on GPU
-#  - Try parallelizing
-#  - Try dockerizing?
-#  - Incorporate pruning
+#  - [ ] Compare full cache vs no cache, do we notice a difference?
+#  - [ ] Try running on GPU
+#  - [ ] Try parallelizing
+#  - [ ] Try dockerizing?
+#  - [ ] Incorporate pruning using skorch integration
 
 def objective(trial):
     num_layers = trial.suggest_int('num_layers', 3, 8)
@@ -59,6 +61,7 @@ def objective(trial):
             "lr": lr,
             "batch_size": batch_size,
             "loss": loss,
+            "epochs": 100,
         },
         "dataset": {
             "lmdb_path": [str(data_path / "train.lmdb")],
@@ -69,22 +72,22 @@ def objective(trial):
             "seed": 12,
             "identifier": "test",
             "dtype": "torch.FloatTensor",
-            "verbose": False,
+            "verbose": True,
         },
     }
 
     trainer = AtomsTrainer(config)
     trainer.train()
 
-    y_pred = np.array(trainer.predict(test_imgs)["energy"])
+    y_pred = np.array(trainer.predict_from_feats(test_feats)["energy"])
 
     return np.mean(np.abs(y_pred - y_test))
 
-def run_hyperparameter_optimization():
+def run_hyperparameter_optimization(n_trials):
     study = optuna.create_study()
-    study.optimize(objective, n_trials=5)
+    study.optimize(objective, n_trials=n_trials)
 
     print(study.best_params)
 
 if __name__ == '__main__':
-    run_hyperparameter_optimization()
+    run_hyperparameter_optimization(20)
