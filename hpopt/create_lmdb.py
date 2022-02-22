@@ -119,12 +119,17 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
     db.sync()
     db.close()
 
+def save_to_traj(imgs, path):
+    with Trajectory(path, "w") as t:
+        for img in tqdm(imgs, desc="Writing data to .traj"):
+            t.write(img)
 
 def main(data_dir: Path, train_fname: str, test_fname: str) -> None:
     """Split into train, valid and test, calculate features and save to lmdb."""
     train_lmdb_path = data_dir / "train.lmdb"
     test_lmdb_path = data_dir / "test.lmdb"
     valid_lmdb_path = data_dir / "valid.lmdb"
+    valid_traj_path = data_dir / "valid.traj"
 
     for path in [train_lmdb_path, test_lmdb_path, valid_lmdb_path]:
         if path.exists():
@@ -141,6 +146,7 @@ def main(data_dir: Path, train_fname: str, test_fname: str) -> None:
     test_feats = featurizer.transform(test_imgs)
 
     print("\nSaving data...")
+    save_to_traj(valid_imgs, valid_traj_path)
     save_to_lmdb(train_feats, featurizer, train_lmdb_path)
     save_to_lmdb(test_feats, featurizer, test_lmdb_path)
     save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)

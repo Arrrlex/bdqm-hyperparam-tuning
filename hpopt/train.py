@@ -12,15 +12,15 @@ gpus = int(torch.cuda.is_available())
 
 data_path = bdqm_hpopt_path / 'data'
 
-test_imgs = Trajectory(data_path / "oc20_300_test.traj")
-y_test = np.array([img.get_potential_energy() for img in test_imgs])
-test_feats = get_lmdb_dataset([str(data_path / 'test.lmdb')], cache_type="full")
+valid_imgs = Trajectory(data_path / "valid.traj")
+y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
+valid_feats = get_lmdb_dataset([str(data_path / 'valid.lmdb')], cache_type="full")
 
 
 # To investigate:
 #  - [x] Get this simple pipeline working with optuna
-#  - [ ] Use valid set instead of test set for hyperparam tuning
-#  - [ ] Use features already pre-prepared for prediction, rather than re-creating features
+#  - [x] Use valid set instead of test set for hyperparam tuning
+#  - [x] Use features already pre-prepared for prediction, rather than re-creating features
 #    each time
 #  - [ ] Compare full cache vs no cache, do we notice a difference?
 #  - [ ] Try running on GPU
@@ -79,9 +79,9 @@ def objective(trial):
     trainer = AtomsTrainer(config)
     trainer.train()
 
-    y_pred = np.array(trainer.predict_from_feats(test_feats)["energy"])
+    y_pred = np.array(trainer.predict_from_feats(valid_feats)["energy"])
 
-    return np.mean(np.abs(y_pred - y_test))
+    return np.mean(np.abs(y_pred - y_valid))
 
 def run_hyperparameter_optimization(n_trials):
     study = optuna.create_study()
