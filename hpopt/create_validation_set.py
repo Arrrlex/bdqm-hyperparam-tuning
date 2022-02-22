@@ -7,17 +7,18 @@ This lets us reserve the test data to do a true test of our final hyperparameter
 from pathlib import Path
 from typing import Iterable
 
-from ase.io import Trajectory
 from ase import Atoms
+from ase.io import Trajectory
 from tqdm import tqdm
+from utils import bdqm_hpopt_path, split_data
 
-from utils import  bdqm_hpopt_path, split_data
 
 def save_to_traj(imgs: Iterable[Atoms], path: Path):
     """Save `imgs`"""
     with Trajectory(path, "w") as t:
         for img in tqdm(imgs, desc="Writing data to .traj"):
             t.write(img)
+
 
 def main(data_dir: Path, train_fname: str) -> None:
     """Split train into train & valid, save to .traj files."""

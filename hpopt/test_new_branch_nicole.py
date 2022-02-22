@@ -1,18 +1,16 @@
 """
 Script to be used with the amptorch branch https://github.com/medford-group/amptorch/tree/BDQM_VIP_2022Feb
 """
+from pathlib import Path
+
+import ase.io
 import numpy as np
 import torch
-from ase import Atoms
-import ase.io
-from ase.calculators.emt import EMT
-from ase.build import molecule
-
-
 from amptorch.ase_utils import AMPtorch
 from amptorch.trainer import AtomsTrainer
-
-from pathlib import Path
+from ase import Atoms
+from ase.build import molecule
+from ase.calculators.emt import EMT
 
 hpopt_root = Path(__file__).resolve().parents[1]
 amptorch_root = hpopt_root.parent / "amptorch"
@@ -25,24 +23,54 @@ training = ase.io.read(hpopt_root / "data/water_2d.traj", index=":")
 
 # define sigmas
 nsigmas = 10
-sigmas = np.linspace(0, 2.0,nsigmas+1,endpoint=True)[1:]
+sigmas = np.linspace(0, 2.0, nsigmas + 1, endpoint=True)[1:]
 print(sigmas)
 
 # define MCSH orders
 MCSHs_index = 2
 MCSHs_dict = {
-0: { "orders": [0], "sigmas": sigmas,},
-1: { "orders": [0,1], "sigmas": sigmas,},
-2: { "orders": [0,1,2], "sigmas": sigmas,},
-3: { "orders": [0,1,2,3], "sigmas": sigmas,},
-4: { "orders": [0,1,2,3,4], "sigmas": sigmas,},
-5: { "orders": [0,1,2,3,4,5], "sigmas": sigmas,},
-6: { "orders": [0,1,2,3,4,5,6], "sigmas": sigmas,},
-7: { "orders": [0,1,2,3,4,5,6,7], "sigmas": sigmas,},
-8: { "orders": [0,1,2,3,4,5,6,7,8], "sigmas": sigmas,},
-9: { "orders": [0,1,2,3,4,5,6,7,8,9], "sigmas": sigmas,},
+    0: {
+        "orders": [0],
+        "sigmas": sigmas,
+    },
+    1: {
+        "orders": [0, 1],
+        "sigmas": sigmas,
+    },
+    2: {
+        "orders": [0, 1, 2],
+        "sigmas": sigmas,
+    },
+    3: {
+        "orders": [0, 1, 2, 3],
+        "sigmas": sigmas,
+    },
+    4: {
+        "orders": [0, 1, 2, 3, 4],
+        "sigmas": sigmas,
+    },
+    5: {
+        "orders": [0, 1, 2, 3, 4, 5],
+        "sigmas": sigmas,
+    },
+    6: {
+        "orders": [0, 1, 2, 3, 4, 5, 6],
+        "sigmas": sigmas,
+    },
+    7: {
+        "orders": [0, 1, 2, 3, 4, 5, 6, 7],
+        "sigmas": sigmas,
+    },
+    8: {
+        "orders": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "sigmas": sigmas,
+    },
+    9: {
+        "orders": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "sigmas": sigmas,
+    },
 }
-MCSHs = MCSHs_dict[MCSHs_index] # MCSHs is now just the order of MCSHs. 
+MCSHs = MCSHs_dict[MCSHs_index]  # MCSHs is now just the order of MCSHs.
 
 
 GMP = {
@@ -59,12 +87,12 @@ elements = ["H", "O"]
 
 config = {
     "model": {
-        "name":"singlenn",
+        "name": "singlenn",
         "get_forces": True,
         "num_layers": 3,
         "num_nodes": 10,
         "batchnorm": False,
-        "activation":torch.nn.Tanh,
+        "activation": torch.nn.Tanh,
     },
     "optim": {
         "gpus": num_gpus,

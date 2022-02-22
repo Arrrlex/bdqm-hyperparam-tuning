@@ -1,23 +1,22 @@
+import os
 import sys
-import torch
-from ase.io import Trajectory
-from amptorch.trainer import AtomsTrainer
+
 import numpy as np
 import optuna
-from torch import nn
+import torch
 from amptorch.dataset_lmdb import get_lmdb_dataset
-
+from amptorch.trainer import AtomsTrainer
+from ase.io import Trajectory
+from torch import nn
 from utils import bdqm_hpopt_path
-
-import os
 
 gpus = min(1, torch.cuda.device_count())
 
-data_path = bdqm_hpopt_path / 'data'
+data_path = bdqm_hpopt_path / "data"
 
 valid_imgs = Trajectory(data_path / "valid.traj")
 y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
-valid_feats = get_lmdb_dataset([str(data_path / 'valid.lmdb')], cache_type="full")
+valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full")
 
 
 # To investigate:
@@ -31,9 +30,10 @@ valid_feats = get_lmdb_dataset([str(data_path / 'valid.lmdb')], cache_type="full
 #  - [ ] Try dockerizing?
 #  - [ ] Incorporate pruning using skorch integration
 
+
 def objective(trial):
-    num_layers = trial.suggest_int('num_layers', 3, 8)
-    num_nodes = trial.suggest_int('num_nodes', 4, 15)
+    num_layers = trial.suggest_int("num_layers", 3, 8)
+    num_nodes = trial.suggest_int("num_nodes", 4, 15)
 
     # model params
     batchnorm = False
@@ -86,14 +86,15 @@ def objective(trial):
 
     return np.mean(np.abs(y_pred - y_valid))
 
+
 def run_hyperparameter_optimization(n_trials, connection_string=None):
     if connection_string is None:
         study = optuna.create_study()
     else:
         study = optuna.create_study(
-          study_name="distributed-amptorch-tuning", 
-          storage=connection_string,
-          load_if_exists=True,
+            study_name="distributed-amptorch-tuning",
+            storage=connection_string,
+            load_if_exists=True,
         )
 
     study.optimize(objective, n_trials=n_trials)
@@ -102,10 +103,10 @@ def run_hyperparameter_optimization(n_trials, connection_string=None):
 
 
 def construct_connection_string():
-    username = os.getenv('MYSQL_USERNAME')
-    password = os.getenv('MYSQL_PASSWORD')
-    node = os.getenv('MYSQL_NODE')
-    db = os.getenv('DB')
+    username = os.getenv("MYSQL_USERNAME")
+    password = os.getenv("MYSQL_PASSWORD")
+    node = os.getenv("MYSQL_NODE")
+    db = os.getenv("DB")
     return f"mysql+pymysql://{username}:{password}@{node}/{db}"
 
 
@@ -113,10 +114,11 @@ def parse_args(n_trials):
     n_trials = int(n_trials)
     return n_trials
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     connection_string = construct_connection_string()
     n_trials = parse_args(*sys.argv[1:])
     run_hyperparameter_optimization(
-        n_trials=n_trials, 
+        n_trials=n_trials,
         connection_string=connection_string,
     )
