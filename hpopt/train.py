@@ -22,7 +22,7 @@ valid_feats = get_lmdb_dataset([str(data_path / 'valid.lmdb')], cache_type="full
 #  - [x] Use valid set instead of test set for hyperparam tuning
 #  - [x] Use features already pre-prepared for prediction, rather than re-creating features
 #    each time
-#  - [ ] Compare full cache vs no cache, do we notice a difference?
+#  - [x] Compare full cache vs no cache, do we notice a difference?
 #  - [ ] Try running on GPU
 #  - [ ] Try parallelizing
 #  - [ ] Try dockerizing?
@@ -90,4 +90,4 @@ def run_hyperparameter_optimization(n_trials):
     print(study.best_params)
 
 if __name__ == '__main__':
-    run_hyperparameter_optimization(20)
+    run_hyperparameter_optimization(5)
