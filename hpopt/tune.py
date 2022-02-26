@@ -2,22 +2,27 @@ import sys
 import torch
 from ase.io import Trajectory
 from amptorch.trainer import AtomsTrainer
+import os
+import sys
+
 import numpy as np
 import optuna
-from torch import nn
+import torch
 from amptorch.dataset_lmdb import get_lmdb_dataset
-
+from amptorch.trainer import AtomsTrainer
+from ase.io import Trajectory
+from torch import nn
 from utils import bdqm_hpopt_path
 
 import os
 
 gpus = min(1, torch.cuda.device_count())
 
-data_path = bdqm_hpopt_path / 'data'
+data_path = bdqm_hpopt_path / "data"
 
 valid_imgs = Trajectory(data_path / "valid.traj")
 y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
-valid_feats = get_lmdb_dataset([str(data_path / 'valid.lmdb')], cache_type="full")
+valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full")
 
 
 # To investigate:
@@ -27,13 +32,16 @@ valid_feats = get_lmdb_dataset([str(data_path / 'valid.lmdb')], cache_type="full
 #    each time
 #  - [x] Compare full cache vs no cache, do we notice a difference?
 #  - [x] Try running on GPU
-#  - [ ] Try parallelizing
+#  - [x] Try parallelizing
+#  - [ ] Try parallelizing with GNU Parallel (https://docs.pace.gatech.edu/software/multiparallel/)
 #  - [ ] Try dockerizing?
 #  - [ ] Incorporate pruning using skorch integration
+#  - [ ] Try fixing torch.DoubleTensor
+
 
 def objective(trial):
-    num_layers = trial.suggest_int('num_layers', 3, 8)
-    num_nodes = trial.suggest_int('num_nodes', 4, 15)
+    num_layers = trial.suggest_int("num_layers", 3, 8)
+    num_nodes = trial.suggest_int("num_nodes", 4, 15)
 
     # model params
     batchnorm = False
@@ -102,10 +110,10 @@ def run_hyperparameter_optimization(n_trials, connection_string=None):
 
 
 def construct_connection_string():
-    username = os.getenv('MYSQL_USERNAME')
-    password = os.getenv('MYSQL_PASSWORD')
-    node = os.getenv('MYSQL_NODE')
-    db = os.getenv('DB')
+    username = os.getenv("MYSQL_USERNAME")
+    password = os.getenv("MYSQL_PASSWORD")
+    node = os.getenv("MYSQL_NODE")
+    db = os.getenv("DB")
     return f"mysql+pymysql://{username}:{password}@{node}/{db}"
 
 
@@ -113,11 +121,12 @@ def parse_args(n_trials):
     n_trials = int(n_trials)
     return n_trials
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     connection_string = construct_connection_string()
     n_trials = parse_args(*sys.argv[1:])
     print(f"Using {gpus} gpus")
     run_hyperparameter_optimization(
-        n_trials=n_trials, 
+        n_trials=n_trials,
         connection_string=connection_string,
     )

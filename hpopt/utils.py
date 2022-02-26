@@ -1,11 +1,11 @@
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple, Sequence
+from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
+import numpy as np
 from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData
 from ase import Atom
 from tqdm.contrib import tenumerate
-import numpy as np
 
 rng = np.random.default_rng()
 
@@ -34,6 +34,7 @@ def gen_mcshs(sigmas: Iterable[float], n: int) -> MCSH:
     def mcsh(i):
         groups = [1] if i == 0 else list(np.arange(i) + 1)
         return {"groups": groups, "sigmas": sigmas}
+
     return {str(i): mcsh(i) for i in range(n)}
 
 

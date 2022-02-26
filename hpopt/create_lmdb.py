@@ -6,7 +6,7 @@ This lets us save time during hyperparameter optimization.
 
 import pickle
 from pathlib import Path
-from typing import Tuple, Sequence
+from typing import Sequence, Tuple
 
 import lmdb
 import numpy as np
@@ -14,19 +14,11 @@ from amptorch.preprocessing import FeatureScaler, TargetScaler
 from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
-
-from utils import (
-    bdqm_hpopt_path,
-    get_path_to_gaussian,
-    get_all_elements,
-    GMPTransformer,
-    ScalerTransformer,
-)
+from utils import (GMPTransformer, ScalerTransformer, bdqm_hpopt_path,
+                   get_all_elements, get_path_to_gaussian)
 
 
-def mk_feature_pipeline(
-    train_imgs: Sequence
-) -> Tuple[Sequence, Pipeline]:
+def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
     """
     Compute scaled feature values for train data
 
