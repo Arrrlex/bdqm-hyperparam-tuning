@@ -4,12 +4,12 @@
 #PBS -l walltime=02:00:00
 #PBS -q pace-ice-gpu
 
-cd $PBS_O_WORKDIR
 echo "Started on `/bin/hostname`"
 echo "Nodes chosen are:"
 cat $PBS_NODEFILE
 
-source ~/bdqm-hyperparam-tuning/setup-session.sh
-source ~/.env
+cd ~/bdqm-hyperparam-tuning
 
-python ~/bdqm-hyperparam-tuning/hpopt/tune.py 2
+source jobs/setup-session.sh
+python jobs/start_mysql_server.py
+python hpopt/tune.py 20
