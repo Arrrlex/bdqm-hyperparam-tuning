@@ -75,7 +75,7 @@ def objective(trial):
             "seed": 12,
             "identifier": "test",
             "dtype": "torch.FloatTensor",
-            "verbose": True,
+            "verbose": False,
         },
     }
 
@@ -116,6 +116,7 @@ def parse_args(n_trials):
 if __name__ == '__main__':
     connection_string = construct_connection_string()
     n_trials = parse_args(*sys.argv[1:])
+    print(f"Using {gpus} gpus")
     run_hyperparameter_optimization(
         n_trials=n_trials, 
         connection_string=connection_string,
