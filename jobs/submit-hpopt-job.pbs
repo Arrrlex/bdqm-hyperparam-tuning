@@ -10,6 +10,7 @@ cat $PBS_NODEFILE
 
 cd ~/bdqm-hyperparam-tuning
 
+NUM_TRIALS=$(cat ~/bdqm-hyperparam-tuning/.num_trials)
+
 source jobs/setup-session.sh
-python jobs/start_mysql_server.py
-python hpopt/tune.py 20
+python hpopt/tune.py $NUM_TRIALS

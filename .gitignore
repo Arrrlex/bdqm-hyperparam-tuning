@@ -1,3 +1,5 @@
+.num_trials
+
 **/checkpoints/*
 **/processed/*
 data/normalizers.pt

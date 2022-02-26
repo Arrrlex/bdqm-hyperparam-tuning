@@ -116,6 +116,7 @@ def parse_args(n_trials):
 
 if __name__ == "__main__":
     n_trials = parse_args(*sys.argv[1:])
+    print(f"Running hyperparam tuning with {n_trials} trials")
     print(f"Using {gpus} gpus")
     run_hyperparameter_optimization(
         n_trials=n_trials,
