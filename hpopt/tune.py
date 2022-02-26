@@ -17,6 +17,8 @@ from utils import bdqm_hpopt_path, connection_string
 import os
 import warnings
 
+NUM_EPOCHS = 1000
+
 gpus = min(1, torch.cuda.device_count())
 
 data_path = bdqm_hpopt_path / "data"
@@ -26,20 +28,6 @@ y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
 valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full")
 
 warnings.simplefilter("ignore")
-
-# To investigate:
-#  - [x] Get this simple pipeline working with optuna
-#  - [x] Use valid set instead of test set for hyperparam tuning
-#  - [x] Use features already pre-prepared for prediction, rather than re-creating features
-#    each time
-#  - [x] Compare full cache vs no cache, do we notice a difference?
-#  - [x] Try running on GPU
-#  - [x] Try parallelizing
-#  - [ ] Try parallelizing with GNU Parallel (https://docs.pace.gatech.edu/software/multiparallel/)
-#  - [ ] Try dockerizing?
-#  - [ ] Incorporate pruning using skorch integration
-#  - [ ] Try fixing torch.DoubleTensor
-
 
 def objective(trial):
     num_layers = trial.suggest_int("num_layers", 3, 8)
@@ -74,7 +62,7 @@ def objective(trial):
             "lr": lr,
             "batch_size": batch_size,
             "loss": loss,
-            "epochs": 100,
+            "epochs": NUM_EPOCHS,
         },
         "dataset": {
             "lmdb_path": [str(data_path / "train.lmdb")],
