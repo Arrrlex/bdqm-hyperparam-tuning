@@ -7,6 +7,8 @@ from amptorch.preprocessing import AtomsToData
 from ase import Atom
 from tqdm.contrib import tenumerate
 
+from dotenv import dotenv_values
+
 rng = np.random.default_rng()
 
 
@@ -14,6 +16,18 @@ rng = np.random.default_rng()
 bdqm_hpopt_path = Path(__file__).resolve().parents[1]
 # Path to amptorch git repo (assumed to be ../../amptorch)
 amptorch_path = Path(__file__).resolve().parents[2] / "amptorch"
+
+
+def _construct_connection_string():
+    config = dotenv_values(bdqm_hpopt_path / '.env')
+    username = config["MYSQL_USERNAME"]
+    password = config["MYSQL_PASSWORD"]
+    node = config["MYSQL_NODE"]
+    db = config["HPOPT_DB"]
+    return f"mysql+pymysql://{username}:{password}@{node}/{db}"
+
+
+connection_string = _construct_connection_string()
 
 
 def get_path_to_gaussian(element: str) -> Path:

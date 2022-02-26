@@ -13,6 +13,7 @@ dependencies:
   - cudatoolkit=10.2
   - h5py
   - pyg
+  - python-dotenv
   - pip:
     - --find-links https://data.pyg.org/whl/torch-1.8.0+cu102.html
     - cffi

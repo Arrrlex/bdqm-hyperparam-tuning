@@ -12,9 +12,10 @@ from amptorch.dataset_lmdb import get_lmdb_dataset
 from amptorch.trainer import AtomsTrainer
 from ase.io import Trajectory
 from torch import nn
-from utils import bdqm_hpopt_path
+from utils import bdqm_hpopt_path, connection_string
 
 import os
+import warnings
 
 gpus = min(1, torch.cuda.device_count())
 
@@ -24,6 +25,7 @@ valid_imgs = Trajectory(data_path / "valid.traj")
 y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
 valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full")
 
+warnings.simplefilter("ignore")
 
 # To investigate:
 #  - [x] Get this simple pipeline working with optuna
@@ -106,16 +108,6 @@ def run_hyperparameter_optimization(n_trials, connection_string=None):
 
     study.optimize(objective, n_trials=n_trials)
 
-    print(study.best_params)
-
-
-def construct_connection_string():
-    username = os.getenv("MYSQL_USERNAME")
-    password = os.getenv("MYSQL_PASSWORD")
-    node = os.getenv("MYSQL_NODE")
-    db = os.getenv("DB")
-    return f"mysql+pymysql://{username}:{password}@{node}/{db}"
-
 
 def parse_args(n_trials):
     n_trials = int(n_trials)
@@ -123,7 +115,6 @@ def parse_args(n_trials):
 
 
 if __name__ == "__main__":
-    connection_string = construct_connection_string()
     n_trials = parse_args(*sys.argv[1:])
     print(f"Using {gpus} gpus")
     run_hyperparameter_optimization(
