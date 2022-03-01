@@ -17,7 +17,6 @@ from utils import bdqm_hpopt_path, connection_string
 import os
 import warnings
 
-NUM_EPOCHS = 1000
 
 gpus = min(1, torch.cuda.device_count())
 
@@ -30,20 +29,23 @@ valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full
 warnings.simplefilter("ignore")
 
 def objective(trial):
-    num_layers = trial.suggest_int("num_layers", 3, 8)
-    num_nodes = trial.suggest_int("num_nodes", 4, 15)
+    num_layers = trial.suggest_int("num_layers", 3, 30)
+    num_nodes = trial.suggest_int("num_nodes", 4, 50)
 
     # model params
-    batchnorm = False
-    dropout = False
-    dropout_rate = 0.5
+    batchnorm = trial.suggest_int("batchnorm", 0, 1) # False
+    dropout = trial.suggest_int("dropout", 0, 1) # False
+    dropout_rate = trial.suggest_float(0.0, 1.0) # 0.5
     initialization = "xavier"
-    activation = nn.Tanh
+    activation_name = trial.suggest_categorical("activation", ["tanh", "relu"])
+    activation = {"tanh": nn.Tanh, "relu": nn.ReLU}[activation_name] # nn.Tanh
 
     # optim params
-    lr = 1e-3
-    batch_size = 253
+    lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True) # 1e-3
+    batch_size = trial.suggest_int("batch_size", 100, 500, 50) # 253
     loss = "mae"
+	
+    num_epochs = 1000
 
     config = {
         "model": {
@@ -62,7 +64,7 @@ def objective(trial):
             "lr": lr,
             "batch_size": batch_size,
             "loss": loss,
-            "epochs": NUM_EPOCHS,
+            "epochs": num_epochs,
         },
         "dataset": {
             "lmdb_path": [str(data_path / "train.lmdb")],
