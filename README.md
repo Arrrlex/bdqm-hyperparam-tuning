@@ -89,7 +89,7 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
 1. Activate VPN and SSH into login node
 2. Run `cd ~/bdqm-hyperparam-tuning`
 3. Initialize conda: `source jobs/setup-session.sh`
-4. Run `./jobs/run-tuning-jobs.sh 5 50`. This will run 5 tuning jobs, each of which will run for 50 trials.
+4. Run `./jobs/run-tuning-jobs.sh 5 50`. This will run 5 tuning jobs, each of which will run for 50 trials. This script will also check if a MySQL server is running, and start one if not.
 
 ## Other Scripts
 
