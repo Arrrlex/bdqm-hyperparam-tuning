@@ -35,7 +35,7 @@ def objective(trial):
     # model params
     batchnorm = trial.suggest_int("batchnorm", 0, 1) # False
     dropout = trial.suggest_int("dropout", 0, 1) # False
-    dropout_rate = trial.suggest_float(0.0, 1.0) # 0.5
+    dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1.0) # 0.5
     initialization = "xavier"
     activation_name = trial.suggest_categorical("activation", ["tanh", "relu"])
     activation = {"tanh": nn.Tanh, "relu": nn.ReLU}[activation_name] # nn.Tanh
