@@ -70,7 +70,7 @@ def objective(trial):
             "identifier": "test",
             "dtype": "torch.DoubleTensor",
             "verbose": False,
-            "custom_callback": SkorchPruningCallback,
+            "custom_callback": SkorchPruningCallback(trial, "valid_acc"),
         },
     }
 
