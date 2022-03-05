@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 NUM_JOBS=$1
-NUM_TRIALS=$1
+NUM_TRIALS=$2
 
 echo $NUM_TRIALS > ~/bdqm-hyperparam-tuning/.num_trials
 
-python jobs/start_mysql_server.py
+conda run -n bdqm-hpopt python jobs/start_mysql_server.py
 
-for i in $(seq 1 $1)
+for i in $(seq 1 $NUM_JOBS)
 do
   qsub ~/bdqm-hyperparam-tuning/jobs/submit-hpopt-job.pbs
 done
