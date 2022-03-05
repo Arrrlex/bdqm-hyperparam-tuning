@@ -37,7 +37,7 @@ def get_or_create(study_name=STUDY_NAME, with_db=True):
 
 def get_best_params(study_name=STUDY_NAME):
     study = get_or_create(study_name=study_name, with_db=True)
-    return f"Best params: {study.best_params} with MAE {study.best_value}"
+    print(f"Best params: {study.best_params} with MAE {study.best_value}")
 
 
 def generate_report(study_name=STUDY_NAME):
@@ -50,11 +50,13 @@ if __name__ == "__main__":
     import sys
 
     cmd = sys.argv[1]
-    if cmd == "delete":
-        delete()
-    elif cmd == "best-params":
-        print(get_best_params())
-    elif cmd == "report":
-        generate_report()
-    else:
-        print(f'Command "{cmd}" not recognised')
+    actions = {
+      "delete": delete,
+      "best-params": get_best_params,
+      "report": generate_report,
+    }
+    def default():
+      print(f"{cmd} not recognised, try one of:", end=" ")
+      print(", ".join(actions.keys()))
+    
+    actions.get(cmd, default)()
