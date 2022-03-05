@@ -44,6 +44,8 @@ def generate_report(study_name=STUDY_NAME):
     study = get_or_create(study_name=study_name, with_db=True)
     fig = optuna.visualization.plot_contour(study, params=["num_layers", "num_nodes"])
     fig.write_image("contour_plot.png")
+    
+    optuna.visualization.plot_intermediate_values(study).write_image("intermediate.png")
 
 
 if __name__ == "__main__":
