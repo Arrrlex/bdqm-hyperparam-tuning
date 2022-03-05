@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, Iterable, List, Sequence
 
 import numpy as np
 from amptorch.descriptor.GMP import GMP
@@ -7,27 +7,13 @@ from amptorch.preprocessing import AtomsToData
 from ase import Atom
 from tqdm.contrib import tenumerate
 
-from dotenv import dotenv_values
-
 rng = np.random.default_rng()
 
-
-# Path to data directory (../data)
+# Path to root of bdqm-hyperparam-tuning repo
 bdqm_hpopt_path = Path(__file__).resolve().parents[1]
+
 # Path to amptorch git repo (assumed to be ../../amptorch)
 amptorch_path = Path(__file__).resolve().parents[2] / "amptorch"
-
-
-def _construct_connection_string():
-    config = dotenv_values(bdqm_hpopt_path / '.env')
-    username = config["MYSQL_USERNAME"]
-    password = config["MYSQL_PASSWORD"]
-    node = config["MYSQL_NODE"]
-    db = config["HPOPT_DB"]
-    return f"mysql+pymysql://{username}:{password}@{node}/{db}"
-
-
-connection_string = _construct_connection_string()
 
 
 def get_path_to_gaussian(element: str) -> Path:
@@ -44,7 +30,11 @@ def get_all_elements(traj: Iterable[Iterable[Atom]]) -> List[str]:
 MCSH = Dict[str, Dict[str, Iterable[float]]]
 
 
-def gen_mcshs(sigmas: Iterable[float], n: int) -> MCSH:
+def _gen_mcshs(sigmas: Iterable[float], n: int) -> MCSH:
+    """
+    Generate "MCSHs" dictionary for GMP.
+    """
+
     def mcsh(i):
         groups = [1] if i == 0 else list(np.arange(i) + 1)
         return {"groups": groups, "sigmas": sigmas}
@@ -63,7 +53,7 @@ class GMPTransformer:
         **a2d_kwargs,
     ):
         MCSHs = {
-            "MCSHs": gen_mcshs(sigmas, 3),
+            "MCSHs": _gen_mcshs(sigmas, 3),
             "atom_gaussians": atom_gaussians,
             "cutoff": cutoff,
         }

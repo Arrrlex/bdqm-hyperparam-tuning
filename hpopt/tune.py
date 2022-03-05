@@ -1,22 +1,15 @@
 import sys
-import torch
-from ase.io import Trajectory
-from amptorch.trainer import AtomsTrainer
-import os
-import sys
+import warnings
 
+import hp_study
 import numpy as np
-import optuna
 import torch
 from amptorch.dataset_lmdb import get_lmdb_dataset
 from amptorch.trainer import AtomsTrainer
 from ase.io import Trajectory
+from optuna.integration.skorch import SkorchPruningCallback
 from torch import nn
-from utils import bdqm_hpopt_path, connection_string
-
-import os
-import warnings
-
+from utils import bdqm_hpopt_path
 
 gpus = min(1, torch.cuda.device_count())
 
@@ -28,23 +21,24 @@ valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full
 
 warnings.simplefilter("ignore")
 
+
 def objective(trial):
     num_layers = trial.suggest_int("num_layers", 3, 30)
     num_nodes = trial.suggest_int("num_nodes", 4, 50)
 
     # model params
-    batchnorm = trial.suggest_int("batchnorm", 0, 1) # False
-    dropout = trial.suggest_int("dropout", 0, 1) # False
-    dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1.0) # 0.5
+    batchnorm = trial.suggest_int("batchnorm", 0, 1)  # False
+    dropout = trial.suggest_int("dropout", 0, 1)  # False
+    dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1.0)  # 0.5
     initialization = "xavier"
     activation_name = trial.suggest_categorical("activation", ["tanh", "relu"])
-    activation = {"tanh": nn.Tanh, "relu": nn.ReLU}[activation_name] # nn.Tanh
+    activation = {"tanh": nn.Tanh, "relu": nn.ReLU}[activation_name]  # nn.Tanh
 
     # optim params
-    lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True) # 1e-3
-    batch_size = trial.suggest_int("batch_size", 100, 500, 50) # 253
+    lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)  # 1e-3
+    batch_size = trial.suggest_int("batch_size", 100, 500, 50)  # 253
     loss = "mae"
-	
+
     num_epochs = 1000
 
     config = {
@@ -76,6 +70,7 @@ def objective(trial):
             "identifier": "test",
             "dtype": "torch.DoubleTensor",
             "verbose": False,
+            "custom_callback": SkorchPruningCallback,
         },
     }
 
@@ -86,16 +81,9 @@ def objective(trial):
 
     return np.mean(np.abs(y_pred - y_valid))
 
-def run_hyperparameter_optimization(n_trials, connection_string=None):
-    if connection_string is None:
-        study = optuna.create_study()
-    else:
-        study = optuna.create_study(
-          study_name="distributed-amptorch-tuning", 
-          storage=connection_string,
-          load_if_exists=True,
-        )
 
+def run_hyperparameter_optimization(n_trials, with_db):
+    study = hp_study.get_or_create(with_db=with_db)
     study.optimize(objective, n_trials=n_trials)
 
 
@@ -110,5 +98,5 @@ if __name__ == "__main__":
     print(f"Using {gpus} gpus")
     run_hyperparameter_optimization(
         n_trials=n_trials,
-        connection_string=connection_string,
+        with_db=True,
     )

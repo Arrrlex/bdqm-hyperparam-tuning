@@ -10,11 +10,11 @@ from typing import Sequence, Tuple
 
 import lmdb
 import numpy as np
+import torch
 from amptorch.preprocessing import FeatureScaler, TargetScaler
 from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
-import torch
 from utils import (GMPTransformer, ScalerTransformer, bdqm_hpopt_path,
                    get_all_elements, get_path_to_gaussian)
 
