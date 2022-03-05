@@ -74,7 +74,7 @@ def objective(trial):
             "debug": False,
             "seed": 12,
             "identifier": "test",
-            "dtype": "torch.FloatTensor",
+            "dtype": "torch.DoubleTensor",
             "verbose": False,
         },
     }

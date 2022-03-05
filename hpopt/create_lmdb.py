@@ -14,6 +14,7 @@ from amptorch.preprocessing import FeatureScaler, TargetScaler
 from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
+import torch
 from utils import (GMPTransformer, ScalerTransformer, bdqm_hpopt_path,
                    get_all_elements, get_path_to_gaussian)
 
@@ -122,6 +123,7 @@ def main(data_dir: Path, train_fname: str, valid_fname: str, test_fname: str) ->
             print(f"{path} already exists, aborting")
             return
 
+    torch.set_default_tensor_type(torch.DoubleTensor)
     print("Loading data...")
     train_imgs = Trajectory(data_dir / train_fname)
     valid_imgs = Trajectory(data_dir / valid_fname)
