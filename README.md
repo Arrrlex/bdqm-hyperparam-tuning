@@ -8,7 +8,8 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
 - hpopt
   - Contains code for running hyperparameter optimization jobs, as well as analysing the results
 
-## One-Time Setup on PACE-ICE
+## Usage
+### One-Time Setup on PACE-ICE
 
 1. Activate the Gatech VPN (https://docs.pace.gatech.edu/gettingStarted/vpn/) 
 2. Log in to the login node:
@@ -66,7 +67,7 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
     HPOPT_DB=hpopt
     ```
 
-## Running Code Interactively
+### Running Code Interactively
 
 1. Activate VPN
 2. SSH into login node
@@ -84,17 +85,18 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
 
 5. Run some code
 
-## Running Parallel Hyperparameter Tuning Jobs
+### Running Parallel Hyperparameter Tuning Jobs
 
 1. Activate VPN and SSH into login node
 2. Run `cd ~/bdqm-hyperparam-tuning`
 3. Initialize conda: `source jobs/setup-session.sh`
 4. Run `./jobs/run-tuning-jobs.sh 5 50`. This will run 5 tuning jobs, each of which will run for 50 trials. This script will also check if a MySQL server is running, and start one if not.
 
-## Other Scripts
+### Other Tasks
 
-- `hpopt/delete_study.py` can be used to delete the previous trials in the study
+- `hpopt/hp_study.py` can be used to perform several tasks on a distributed optuna study:
+  - `python hp_study.py delete` deletes the study
+  - `python hp_study.py report` creates a report (currently just a couple of plots) and writes them to disk
+  - `python hp_study.py best-params` prints the study's best params and their MAE
 - `hpopt/create_validation_set.py` splits the data into train, validation, and test sets
 - `hpopt/create_lmdb.py` Runs featurization on the train, validate, and test datasets, and writes them in lmdb format.
-- `hpopt/generate_report.py` creates a report based on the tuning
-- `hpopt/get_best_params.py` returns which parameters got the lowest score, and what score they attained.
