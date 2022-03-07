@@ -11,14 +11,14 @@ dependencies:
   - python=3.8.*
   - pytorch=1.8.0
   - tqdm=4.45.*
-  - h5py
   - cpuonly
+  - h5py
   - pyg
   - python-dotenv
   - plotly=5.6.*
   - python-kaleido
   - pip:
-    - -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
+    - --find-links https://data.pyg.org/whl/torch-1.8.0+cpu.html
     - cffi
     - wandb
     - lmdb==1.0.0
