@@ -24,22 +24,26 @@ warnings.simplefilter("ignore")
 
 def objective(trial):
     num_layers = trial.suggest_int("num_layers", 3, 30)
-    num_nodes = trial.suggest_int("num_nodes", 4, 50)
+    num_nodes = trial.suggest_int("num_nodes", 4, 200)
 
     # model params
     batchnorm = trial.suggest_int("batchnorm", 0, 1)  # False
-    dropout = trial.suggest_int("dropout", 0, 1)  # False
+    dropout = 1
     dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1.0)  # 0.5
     initialization = "xavier"
-    activation_name = trial.suggest_categorical("activation", ["tanh", "relu"])
-    activation = {"tanh": nn.Tanh, "relu": nn.ReLU}[activation_name]  # nn.Tanh
+    activation = nn.Tanh
+#    activation_name = trial.suggest_categorical("activation", ["tanh", "relu"])
+#    activation = {"tanh": nn.Tanh, "relu": nn.ReLU}[activation_name]  # nn.Tanh
 
     # optim params
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)  # 1e-3
+    lr_step_size = 10
+    lr_gamma = trial.suggest_float("lr_gamma", 1e-5, 1e-1, log=True)
+    lr_scheduler = {"policy": "StepLR", "params": {"step_size": lr_step_size, "gamma": lr_gamma}} 
     batch_size = trial.suggest_int("batch_size", 100, 500, 50)  # 253
     loss = "mae"
 
-    num_epochs = 1000
+    num_epochs = 50
 
     config = {
         "model": {
@@ -56,6 +60,7 @@ def objective(trial):
         "optim": {
             "gpus": gpus,
             "lr": lr,
+            "scheduler": lr_scheduler,
             "batch_size": batch_size,
             "loss": loss,
             "epochs": num_epochs,
@@ -63,6 +68,7 @@ def objective(trial):
         "dataset": {
             "lmdb_path": [str(data_path / "train.lmdb")],
             "cache": "full",
+            "val_split": 0.1,
         },
         "cmd": {
             "debug": False,
@@ -70,7 +76,7 @@ def objective(trial):
             "identifier": "test",
             "dtype": "torch.DoubleTensor",
             "verbose": False,
-            "custom_callback": SkorchPruningCallback(trial, "train_loss"),
+            "custom_callback": SkorchPruningCallback(trial, "val_energy_mae"),
         },
     }
 

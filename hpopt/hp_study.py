@@ -24,7 +24,8 @@ def delete(study_name=STUDY_NAME):
 def get_or_create(study_name=STUDY_NAME, with_db=True):
     params = {
         "pruner": optuna.pruners.HyperbandPruner(),
-        "sampler": optuna.samplers.TPESampler(n_startup_trials=10),
+        "sampler": optuna.samplers.CmaEsSampler(n_startup_trials=10),
+        #"sampler": optuna.samplers.TPESampler(n_startup_trials=10),
         "study_name": study_name,
     }
 
@@ -47,11 +48,9 @@ def generate_report(study_name=STUDY_NAME):
     
     optuna.visualization.plot_intermediate_values(study).write_image("intermediate.png")
 
-
 if __name__ == "__main__":
     import sys
 
-    cmd = sys.argv[1]
     actions = {
       "delete": delete,
       "best-params": get_best_params,
@@ -61,4 +60,5 @@ if __name__ == "__main__":
       print(f"{cmd} not recognised, try one of:", end=" ")
       print(", ".join(actions.keys()))
     
+    cmd = sys.argv[1] if len(sys.argv) > 1 else None
     actions.get(cmd, default)()
