@@ -9,15 +9,12 @@ from pathlib import Path
 from typing import Sequence, Tuple
 
 import lmdb
-import numpy as np
 import torch
 from amptorch.preprocessing import FeatureScaler, TargetScaler
 from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
-from utils import (GMPTransformer, ScalerTransformer, bdqm_hpopt_path,
-                   get_all_elements, get_path_to_gaussian)
-
+from utils import GMPTransformer, ScalerTransformer, bdqm_hpopt_path
 
 def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
     """
@@ -30,17 +27,13 @@ def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
         preprocess_pipeline (Pipeline): the actual pipeline object
     """
 
-    elements = get_all_elements(train_imgs)
-    atom_gaussians = {el: get_path_to_gaussian(el) for el in elements}
-
     featurizer_pipeline = Pipeline(
         steps=[
             (
                 "GMP",
                 GMPTransformer(
-                    atom_gaussians=atom_gaussians,
-                    # sigmas=[0.02, 0.2, 0.4, 0.69, 1.1, 1.66, 2.66, 4.4],
-                    sigmas=np.exp(np.linspace(-2, 1.5, 8)),
+                    n_gaussians=8,
+                    n_mcsh=3,
                     cutoff=5,
                     r_energy=True,
                     r_forces=True,

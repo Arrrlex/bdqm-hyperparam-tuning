@@ -85,8 +85,10 @@ def objective(trial):
 
     y_pred = np.array(trainer.predict_from_feats(valid_feats)["energy"])
 
-    return np.mean(np.abs(y_pred - y_valid))
+    return mae(y_pred, y_valid)
 
+def mae(y_pred, y_true):
+    return np.mean(np.abs(y_pred - y_true))
 
 def run_hyperparameter_optimization(n_trials, with_db):
     study = hp_study.get_or_create(with_db=with_db)

@@ -1,70 +1,56 @@
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence
+from typing import Dict, Sequence, List
 
 import numpy as np
 from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData
-from ase import Atom
 from tqdm.contrib import tenumerate
+import re
+import json
 
 rng = np.random.default_rng()
 
 # Path to root of bdqm-hyperparam-tuning repo
 bdqm_hpopt_path = Path(__file__).resolve().parents[1]
 
-# Path to amptorch git repo (assumed to be ../../amptorch)
-amptorch_path = Path(__file__).resolve().parents[2] / "amptorch"
+def get_electron_densities() -> Dict[str, Path]:
+    gaussians_path = bdqm_hpopt_path / "data/GMP/valence_gaussians"
+    regex = r"(.+?)_"
+    return {re.match(regex, p.name).group(1): p for p in gaussians_path.iterdir()}
 
 
-def get_path_to_gaussian(element: str) -> Path:
-    """Get path to gaussian file given element name."""
-    gaussians_path = amptorch_path / "examples/GMP/valence_gaussians"
-    return next(gaussians_path.glob(f"{element}_*"))
+def get_sigmas() -> Dict[int, List[int]]:
+    with open(bdqm_hpopt_path / "data/GMP/sigmas.json") as f:
+        d = json.load(f)
+    return {int(k): v for k,v in d.items()}
 
-
-def get_all_elements(traj: Iterable[Iterable[Atom]]) -> List[str]:
-    """Get list of elements given iterable of images."""
-    return list({atom.symbol for image in traj for atom in image})
-
-
-MCSH = Dict[str, Dict[str, Iterable[float]]]
-
-
-def _gen_mcshs(sigmas: Iterable[float], n: int) -> MCSH:
-    """
-    Generate "MCSHs" dictionary for GMP.
-    """
-
-    def mcsh(i):
-        groups = [1] if i == 0 else list(np.arange(i) + 1)
-        return {"groups": groups, "sigmas": sigmas}
-
-    return {str(i): mcsh(i) for i in range(n)}
-
+ELECTRON_DENSITIES = get_electron_densities()
+SIGMAS = get_sigmas()
 
 class GMPTransformer:
-    """Scikit-learn compatible wrapper around GMP featurizing code."""
+    """Scikit-learn compatible wrapper for GMP descriptor."""
+    def __init__(self, n_gaussians, n_mcsh, cutoff, **a2d_kwargs):
+        sigmas=SIGMAS[n_gaussians]
 
-    def __init__(
-        self,
-        sigmas: Sequence[float],
-        atom_gaussians: Dict[str, Path],
-        cutoff: float,
-        **a2d_kwargs,
-    ):
+        def mcsh_groups(i): return [1] if i == 0 else list(range(1,i+1))
+
         MCSHs = {
-            "MCSHs": _gen_mcshs(sigmas, 3),
-            "atom_gaussians": atom_gaussians,
+            "MCSHs": {
+                str(i): {
+                    "groups": mcsh_groups(i),
+                    "sigmas": sigmas,
+                } for i in range(n_mcsh)
+            },
+            "atom_gaussians": ELECTRON_DENSITIES,
             "cutoff": cutoff,
         }
-        elements = list(atom_gaussians.keys())
-        self.descriptor = GMP(MCSHs=MCSHs, elements=elements)
-        self.a2d = AtomsToData(descriptor=self.descriptor, **a2d_kwargs)
-        self.setup = ("gmp", MCSHs, {"cutoff": cutoff}, elements)
 
-    @property
-    def elements(self):
-        return self.descriptor.elements
+        self.elements = list(ELECTRON_DENSITIES.keys())
+        self.a2d = AtomsToData(
+            descriptor=GMP(MCSHs=MCSHs, elements=self.elements),
+            **a2d_kwargs
+        )
+        self.setup = ("gmp", MCSHs, {"cutoff": cutoff}, self.elements)
 
     def fit(self, X, y=None):
         return self
