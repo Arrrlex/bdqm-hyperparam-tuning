@@ -10,6 +10,7 @@ from ase.io import Trajectory
 from optuna.integration.skorch import SkorchPruningCallback
 from torch import nn
 from utils import bdqm_hpopt_path
+import typer
 
 from sklearn.metrics import mean_absolute_error
 
@@ -71,21 +72,12 @@ def objective(trial):
     return mean_absolute_error(trainer.predict(valid_imgs)["energy"], y_valid)
 
 
-def run_hyperparameter_optimization(n_trials, with_db):
-    study = hp_study.get_or_create(with_db=with_db)
-    study.optimize(objective, n_trials=n_trials)
-
-
-def parse_args(n_trials):
-    n_trials = int(n_trials)
-    return n_trials
-
-
-if __name__ == "__main__":
-    n_trials = parse_args(*sys.argv[1:])
+def main(n_trials: int, study_name: str = "distributed-amptorch-tuning", local: bool = False):
     print(f"Running hyperparam tuning with {n_trials} trials")
     print(f"Using {gpus} gpus")
-    run_hyperparameter_optimization(
-        n_trials=n_trials,
-        with_db=True,
-    )
+    study = hp_study.get_or_create(study_name=study_name, with_db=not local)
+    study.optimize(objective, n_trials=n_trials)
+    
+
+if __name__ == "__main__":
+    typer.run(main)
