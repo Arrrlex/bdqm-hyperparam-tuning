@@ -11,59 +11,44 @@ from optuna.integration.skorch import SkorchPruningCallback
 from torch import nn
 from utils import bdqm_hpopt_path
 
+from sklearn.metrics import mean_absolute_error
+
 gpus = min(1, torch.cuda.device_count())
 
 data_path = bdqm_hpopt_path / "data"
 
 valid_imgs = Trajectory(data_path / "valid.traj")
 y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
-valid_feats = get_lmdb_dataset([str(data_path / "valid.lmdb")], cache_type="full")
 
 warnings.simplefilter("ignore")
 
 
 def objective(trial):
-    num_layers = trial.suggest_int("num_layers", 3, 30)
-    num_nodes = trial.suggest_int("num_nodes", 4, 200)
-
-    # model params
-    batchnorm = trial.suggest_int("batchnorm", 0, 1)  # False
-    dropout = 1
-    dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1.0)  # 0.5
-    initialization = "xavier"
-    activation = nn.Tanh
-#    activation_name = trial.suggest_categorical("activation", ["tanh", "relu"])
-#    activation = {"tanh": nn.Tanh, "relu": nn.ReLU}[activation_name]  # nn.Tanh
-
-    # optim params
-    lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)  # 1e-3
-    lr_step_size = 10
-    lr_gamma = trial.suggest_float("lr_gamma", 1e-5, 1e-1, log=True)
-    lr_scheduler = {"policy": "StepLR", "params": {"step_size": lr_step_size, "gamma": lr_gamma}} 
-    batch_size = trial.suggest_int("batch_size", 100, 500, 50)  # 253
-    loss = "mae"
-
-    num_epochs = 50
-
     config = {
         "model": {
-            "num_layers": num_layers,
-            "num_nodes": num_nodes,
+            "num_layers": trial.suggest_int("num_layers", 3, 30),
+            "num_nodes": trial.suggest_int("num_nodes", 4, 200),
             "name": "singlenn",
             "get_forces": False,
-            "batchnorm": batchnorm,
-            "dropout": dropout,
-            "dropout_rate": dropout_rate,
-            "initialization": initialization,
-            "activation": activation,
+            "batchnorm": trial.suggest_int("batchnorm", 0, 1),
+            "dropout": 1,
+            "dropout_rate": trial.suggest_float("dropout_rate", 0.0, 1.0),
+            "initialization": "xavier",
+            "activation": nn.Tanh,
         },
         "optim": {
             "gpus": gpus,
-            "lr": lr,
-            "scheduler": lr_scheduler,
-            "batch_size": batch_size,
-            "loss": loss,
-            "epochs": num_epochs,
+            "lr": trial.suggest_float("lr", 1e-5, 1e-2, log=True),
+            "scheduler": {
+                "policy": "StepLR",
+                "params": {
+                    "step_size": trial.suggest_int("lr_step_size", 1, 30, 5),
+                    "gamma": trial.suggest_float("lr_gamma", 1e-5, 1e-1, log=True),
+                },
+            },
+            "batch_size": trial.suggest_int("batch_size", 100, 500, 50),
+            "loss": "mae",
+            "epochs": 100,
         },
         "dataset": {
             "lmdb_path": [str(data_path / "train.lmdb")],
@@ -83,12 +68,8 @@ def objective(trial):
     trainer = AtomsTrainer(config)
     trainer.train()
 
-    y_pred = np.array(trainer.predict_from_feats(valid_feats)["energy"])
+    return mean_absolute_error(trainer.predict(valid_imgs)["energy"], y_valid)
 
-    return mae(y_pred, y_valid)
-
-def mae(y_pred, y_true):
-    return np.mean(np.abs(y_pred - y_true))
 
 def run_hyperparameter_optimization(n_trials, with_db):
     study = hp_study.get_or_create(with_db=with_db)
