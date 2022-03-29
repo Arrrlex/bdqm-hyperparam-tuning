@@ -56,7 +56,7 @@ Mechanics" (Andrew Medford).
     git checkout BDQM_VIP_2022Feb
     pip install -e .
     ```
-9. **Install MySQL**:
+8. **Install MySQL**:
     1. If you've tried to install MySQL before, delete the old attempt: `rm -rf ~/scratch/db`
     2. Run:
 
@@ -104,11 +104,11 @@ Mechanics" (Andrew Medford).
     9. Quit the interactive job, e.g. run `exit` again to get back to the login
        node.
 
-10. Create a file `~/bdqm-hyperparam-tuning/.env` with the following contents:
+9. Create a file `~/bdqm-hyperparam-tuning/.env` with the following contents:
 
     ```
     MYSQL_USERNAME=... # your gatech username
-    MYSQL_PASSWORD=... # the mysql password you set in step 9
+    MYSQL_PASSWORD=... # the mysql password you set in step 8
     HPOPT_DB=hpopt
     MYSQL_NODE=placeholder
     ```
