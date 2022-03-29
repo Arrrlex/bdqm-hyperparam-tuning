@@ -4,28 +4,25 @@ Script to pre-generate features and save in lmdb format.
 This lets us save time during hyperparameter optimization.
 """
 
+import json
 import pickle
+import re
 from pathlib import Path
-from typing import Sequence, Tuple, Iterable, Dict, List
-import numpy as np
+from typing import Dict, Iterable, List, Sequence, Tuple
 
 import lmdb
+import numpy as np
 import torch
-from amptorch.preprocessing import FeatureScaler, TargetScaler
 from amptorch.descriptor.GMP import GMP
-from amptorch.preprocessing import AtomsToData
+from amptorch.preprocessing import AtomsToData, FeatureScaler, TargetScaler
+from ase import Atoms
 from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
+from tqdm.contrib import tenumerate
 
-from ase import Atoms
-from ase.io import Trajectory
-from tqdm import tqdm
 from hpopt.utils import bdqm_hpopt_path, split_data
 
-from tqdm.contrib import tenumerate
-import re
-import json
 
 def get_electron_densities() -> Dict[str, Path]:
     gaussians_path = bdqm_hpopt_path / "data/GMP/valence_gaussians"
@@ -36,10 +33,12 @@ def get_electron_densities() -> Dict[str, Path]:
 def get_sigmas() -> Dict[int, List[int]]:
     with open(bdqm_hpopt_path / "data/GMP/sigmas.json") as f:
         d = json.load(f)
-    return {int(k): v for k,v in d.items()}
+    return {int(k): v for k, v in d.items()}
+
 
 ELECTRON_DENSITIES = get_electron_densities()
 SIGMAS = get_sigmas()
+
 
 class ScalerTransformer:
     """Scikit-learn compatible wrapper for FeatureScaler and TargetScaler."""
@@ -56,19 +55,23 @@ class ScalerTransformer:
     def transform(self, X):
         return self.scaler.norm(X)
 
+
 class GMPTransformer:
     """Scikit-learn compatible wrapper for GMP descriptor."""
-    def __init__(self, n_gaussians, n_mcsh, cutoff, **a2d_kwargs):
-        sigmas=SIGMAS[n_gaussians]
 
-        def mcsh_groups(i): return [1] if i == 0 else list(range(1,i+1))
+    def __init__(self, n_gaussians, n_mcsh, cutoff, **a2d_kwargs):
+        sigmas = SIGMAS[n_gaussians]
+
+        def mcsh_groups(i):
+            return [1] if i == 0 else list(range(1, i + 1))
 
         MCSHs = {
             "MCSHs": {
                 str(i): {
                     "groups": mcsh_groups(i),
                     "sigmas": sigmas,
-                } for i in range(n_mcsh)
+                }
+                for i in range(n_mcsh)
             },
             "atom_gaussians": ELECTRON_DENSITIES,
             "cutoff": cutoff,
@@ -76,8 +79,7 @@ class GMPTransformer:
 
         self.elements = list(ELECTRON_DENSITIES.keys())
         self.a2d = AtomsToData(
-            descriptor=GMP(MCSHs=MCSHs, elements=self.elements),
-            **a2d_kwargs
+            descriptor=GMP(MCSHs=MCSHs, elements=self.elements), **a2d_kwargs
         )
         self.setup = ("gmp", MCSHs, {"cutoff": cutoff}, self.elements)
 
@@ -92,6 +94,7 @@ class GMPTransformer:
                 X, desc="Calculating descriptors", total=n, unit=" images"
             )
         ]
+
 
 def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
     """
@@ -214,6 +217,7 @@ def create_lmdbs(train_fname: str, valid_fname: str, test_fname: str) -> None:
     print("\nSaving valid data...")
     save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)
 
+
 def save_to_traj(imgs: Iterable[Atoms], path: Path):
     """Save `imgs`"""
     with Trajectory(path, "w") as t:
@@ -221,7 +225,9 @@ def save_to_traj(imgs: Iterable[Atoms], path: Path):
             t.write(img)
 
 
-def create_validation_split(train_fname: str, valid_split: int, train_out_fname: str, valid_out_fname: str) -> None:
+def create_validation_split(
+    train_fname: str, valid_split: int, train_out_fname: str, valid_out_fname: str
+) -> None:
     """Split train into train & valid, save to .traj files."""
     data_dir = bdqm_hpopt_path / "data"
 

@@ -1,5 +1,6 @@
 import optuna
 from dotenv import dotenv_values
+
 from hpopt.utils import bdqm_hpopt_path
 
 
@@ -26,17 +27,21 @@ def get_study(study_name: str):
 
 def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str):
     samplers = {
-      "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
-      "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
-      "Random": optuna.samplers.RandomSampler(),
+        "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
+        "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
+        "Random": optuna.samplers.RandomSampler(),
     }
 
     pruners = {
-      "Hyperband": optuna.pruners.HyperbandPruner(),
-      "Median": optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=10),
+        "Hyperband": optuna.pruners.HyperbandPruner(),
+        "Median": optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=10),
     }
 
-    params = {"sampler": samplers[sampler], "pruner": pruners[pruner], "study_name": study_name}
+    params = {
+        "sampler": samplers[sampler],
+        "pruner": pruners[pruner],
+        "study_name": study_name,
+    }
 
     if with_db:
         params["storage"] = CONN_STRING
@@ -57,7 +62,9 @@ def generate_report(study_name: str):
     fig = optuna.visualization.plot_contour(study, params=["num_layers", "num_nodes"])
     fig.write_image(report_dir / "contour_plot.png")
 
-    optuna.visualization.plot_intermediate_values(study).write_image(report_dir / "intermediate.png")
+    optuna.visualization.plot_intermediate_values(study).write_image(
+        report_dir / "intermediate.png"
+    )
 
     print(f"Best params: {study.best_params} with MAE {study.best_value}")
     print(f"Report saved to {report_dir}")

@@ -1,18 +1,18 @@
 import sys
 import warnings
+from uuid import uuid4
 
-from hpopt.study import get_or_create_study
 import numpy as np
 import torch
 from amptorch.dataset_lmdb import get_lmdb_dataset
 from amptorch.trainer import AtomsTrainer
 from ase.io import Trajectory
 from optuna.integration.skorch import SkorchPruningCallback
-from torch import nn
-from hpopt.utils import bdqm_hpopt_path, gpus
-from uuid import uuid4
-
 from sklearn.metrics import mean_absolute_error
+from torch import nn
+
+from hpopt.study import get_or_create_study
+from hpopt.utils import bdqm_hpopt_path, gpus
 
 data_path = bdqm_hpopt_path / "data"
 
@@ -53,10 +53,10 @@ def mk_objective(epochs, verbose):
             "dataset": {
                 "lmdb_path": [str(data_path / "train.lmdb")],
                 "cache": "full",
-                #"val_split": 0.1,
+                # "val_split": 0.1,
             },
             "cmd": {
-                #"debug": True, # prevents logging to checkpoints
+                # "debug": True, # prevents logging to checkpoints
                 "seed": 12,
                 "identifier": str(uuid4()),
                 "dtype": "torch.DoubleTensor",
@@ -64,12 +64,10 @@ def mk_objective(epochs, verbose):
                 "custom_callback": SkorchPruningCallback(trial, "train_energy_mae"),
             },
         }
-    
+
         trainer = AtomsTrainer(config)
         trainer.train()
-    
+
         return mean_absolute_error(trainer.predict(valid_imgs)["energy"], y_valid)
+
     return objective
-
-
-

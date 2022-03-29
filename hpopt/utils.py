@@ -1,13 +1,13 @@
+import json
+import re
 from pathlib import Path
-from typing import Dict, Sequence, List
+from typing import Dict, List, Sequence
 
 import numpy as np
+import torch
 from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData
 from tqdm.contrib import tenumerate
-import re
-import json
-import torch
 
 rng = np.random.default_rng()
 
