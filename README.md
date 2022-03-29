@@ -3,22 +3,21 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
 
 ## Structure
 
-- jobs
-  - Contains code for running and configuring jobs on PACE-ICE
-- hpopt
-  - Contains code for running hyperparameter optimization jobs, as well as analysing the results
+- `jobs` contains `.pbs` files defining jobs to run on PACE
+- `hpopt` contains code for preprocessing, running hyperparameter optimization jobs, and analyzing results
+- `data` contains the source `.traj` files, as well as the preprocessed `.lmdb` files
 
 ## Usage
 ### One-Time Setup on PACE-ICE
 
-1. Activate the Gatech VPN (https://docs.pace.gatech.edu/gettingStarted/vpn/) 
+1. Activate the Gatech VPN (https://docs.pace.gatech.edu/gettingStarted/vpn/)
 2. Log in to the login node:
 
     ```bash
     ssh <your-gatech-username>@pace-ice.pace.gatech.edu
     ```
 
-3. Clone repos: 
+3. Clone repos:
 
     ```bash
     git clone https://github.com/Arrrlex/amptorch.git
@@ -37,14 +36,15 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
     module load anaconda3/2021.05
     ```
 
-6. Create the conda environment:
+6. Create the conda environment and install the project into it:
 
     ```
-    conda env create -f ~/bdqm-hyperparameter-tuning/env_gpu.yml
+    conda env create -f ~/bdqm-hyperparam-tuning/env_gpu.yml
     conda activate bdqm-hpopt
+    pip install -e ~/bdqm-hyperparam-tuning
     ```
 
-7. Switch to the right amptorch branch and install it in the conda env:
+7. Switch to the right amptorch branch and install it into the conda env:
 
     ```
     cd ~/amptorch
@@ -74,7 +74,7 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
 3. Start an interactive job:
 
     ```
-    qsub ~/bdqm-hyperparam-tuning/interactive-gpu-session.pbs
+    qsub ~/bdqm-hyperparam-tuning/jobs/interactive-gpu-session.pbs
     ```
 
 4. Set up the conda environment:
@@ -89,14 +89,13 @@ Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechani
 
 1. Activate VPN and SSH into login node
 2. Run `cd ~/bdqm-hyperparam-tuning`
-3. Initialize conda: `source jobs/setup-session.sh`
-4. Run `./jobs/run-tuning-jobs.sh 5 50`. This will run 5 tuning jobs, each of which will run for 50 trials. This script will also check if a MySQL server is running, and start one if not.
+3. Initialize conda: `source setup-session.sh`
+4. Run `hpopt run-tuning-jobs --n-jobs=5 --n-trials-per-job=10`. Note: before
+  running the tuning jobs, this script will check that MySQL is running and will
+  start a MySQL job if not.
+
+  For more configuration options, run `hpopt run-tuning-jobs --help`.
 
 ### Other Tasks
 
-- `hpopt/hp_study.py` can be used to perform several tasks on a distributed optuna study:
-  - `python hp_study.py delete` deletes the study
-  - `python hp_study.py report` creates a report (currently just a couple of plots) and writes them to disk
-  - `python hp_study.py best-params` prints the study's best params and their MAE
-- `hpopt/create_validation_set.py` splits the data into train, validation, and test sets
-- `hpopt/create_lmdb.py` Runs featurization on the train, validate, and test datasets, and writes them in lmdb format.
+Run `hpopt --help` to see other available commands.

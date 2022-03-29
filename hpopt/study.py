@@ -30,7 +30,7 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
       "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
       "Random": optuna.samplers.RandomSampler(),
     }
-    
+
     pruners = {
       "Hyperband": optuna.pruners.HyperbandPruner(),
       "Median": optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=10),
@@ -45,11 +45,6 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
     return optuna.create_study(**params)
 
 
-def get_best_params(study_name: str):
-    study = get_or_create(study_name=study_name, with_db=True)
-    print(f"Best params: {study.best_params} with MAE {study.best_value}")
-
-
 def generate_report(study_name: str):
     report_dir = bdqm_hpopt_path / "report" / study_name
     try:
@@ -61,8 +56,8 @@ def generate_report(study_name: str):
     study = get_study(study_name)
     fig = optuna.visualization.plot_contour(study, params=["num_layers", "num_nodes"])
     fig.write_image(report_dir / "contour_plot.png")
-    
+
     optuna.visualization.plot_intermediate_values(study).write_image(report_dir / "intermediate.png")
-    
+
     print(f"Best params: {study.best_params} with MAE {study.best_value}")
     print(f"Report saved to {report_dir}")
