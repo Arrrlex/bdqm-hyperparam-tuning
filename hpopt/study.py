@@ -20,6 +20,10 @@ def delete_study(study_name: str):
     optuna.delete_study(study_name=study_name, storage=CONN_STRING)
 
 
+def get_study(study_name: str):
+    return optuna.load_study(study_name=study_name, storage=CONN_STRING)
+
+
 def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str):
     samplers = {
       "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
@@ -47,8 +51,18 @@ def get_best_params(study_name: str):
 
 
 def generate_report(study_name: str):
-    study = get_or_create(study_name=study_name, with_db=True)
+    report_dir = bdqm_hpopt_path / "report" / study_name
+    try:
+        report_dir.mkdir(parents=True)
+    except FileExistsError:
+        print(f"Report directory {report_dir} already exists.")
+        return
+
+    study = get_study(study_name)
     fig = optuna.visualization.plot_contour(study, params=["num_layers", "num_nodes"])
-    fig.write_image("contour_plot.png")
+    fig.write_image(report_dir / "contour_plot.png")
     
-    optuna.visualization.plot_intermediate_values(study).write_image("intermediate.png")
+    optuna.visualization.plot_intermediate_values(study).write_image(report_dir / "intermediate.png")
+    
+    print(f"Best params: {study.best_params} with MAE {study.best_value}")
+    print(f"Report saved to {report_dir}")
