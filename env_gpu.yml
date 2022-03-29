@@ -18,7 +18,6 @@ dependencies:
   - pytorch-spline-conv
   - python-dotenv
   - pip:
-    - --find-links https://data.pyg.org/whl/torch-1.8.0+cu102.html
     - cffi
     - wandb
     - lmdb==1.0.0
