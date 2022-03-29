@@ -30,7 +30,7 @@ Mechanics" (Andrew Medford).
 4. Start an interactive job:
 
     ```
-    qsub ~/bdqm-hyperparam-tuning/interactive-gpu-session.pbs
+    qsub ~/bdqm-hyperparam-tuning/jobs/interactive-gpu-session.pbs
     ```
 
 5. Activate the conda module:
