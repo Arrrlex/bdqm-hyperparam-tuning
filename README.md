@@ -85,7 +85,7 @@ Mechanics" (Andrew Medford).
     4. Run `mysqld_safe &`
     5. Choose a password and make a note of it
     5. Run this, **replacing 'my-secure-password' with the password you just
-       chose:
+       chose**:
 
         ```
         mysql -u root << EOF
