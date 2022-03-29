@@ -6,6 +6,8 @@ data/normalizers.pt
 data/*.lmdb
 data/*.lmdb-lock
 
+.vscode
+
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 

@@ -122,7 +122,7 @@ Mechanics" (Andrew Medford).
     qsub ~/bdqm-hyperparam-tuning/jobs/interactive-gpu-session.pbs
     ```
 
-3. Change to the hyperparam tuning directory:
+3. Change to the project directory:
 
     ```
     cd bdqm-hyperparam-tuning
@@ -164,7 +164,7 @@ Mechanics" (Andrew Medford).
     Take a look at the `name` column. You should see:
 
     - One job named `mysql` (That's where the database is running)
-    - Two jobs named `tune-amptorch-hy` (That's the hyperparam tuning jobs)
+    - Two jobs named `tune-amptorch-hy` (That's the hyperparameter tuning jobs)
     - One job named `interactive-gpu-` (That's your current node)
 
     In the column `status`, you'll see `R` (running) or `Q` (queued).
