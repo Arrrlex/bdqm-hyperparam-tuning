@@ -1,11 +1,14 @@
 # bdqm-hyperparam-tuning
-Code for Hyperparameter Optimization project for "Big Data &amp; Quantum Mechanics" (Andrew Medford).
+Code for Hyperparameter Optimization project for "Big Data &amp; Quantum
+Mechanics" (Andrew Medford).
 
 ## Structure
 
 - `jobs` contains `.pbs` files defining jobs to run on PACE
-- `hpopt` contains code for preprocessing, running hyperparameter optimization jobs, and analyzing results
-- `data` contains the source `.traj` files, as well as the preprocessed `.lmdb` files
+- `hpopt` contains code for preprocessing, running hyperparameter optimization
+  jobs, and analyzing results
+- `data` contains the source `.traj` files, as well as the preprocessed `.lmdb`
+  files (once `hpopt create-lmdb` has been run).
 
 ## Usage
 ### One-Time Setup on PACE-ICE

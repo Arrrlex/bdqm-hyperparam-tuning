@@ -13,6 +13,11 @@ def tune(
     verbose: bool = False,
     n_epochs: int = 100,
 ):
+    """
+    Run hyperparameter tuning on this node (i.e. do not start any jobs).
+
+    Warning: don't run this on the login node of PACE!
+    """
     local = "on DB" if with_db else "locally"
     print(f"Running hyperparam tuning {local} with:")
     print(f" - study_name: {study_name}")
