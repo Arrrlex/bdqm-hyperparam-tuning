@@ -6,15 +6,92 @@ This lets us save time during hyperparameter optimization.
 
 import pickle
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, Iterable, Dict, List
+import numpy as np
 
 import lmdb
 import torch
 from amptorch.preprocessing import FeatureScaler, TargetScaler
+from amptorch.descriptor.GMP import GMP
+from amptorch.preprocessing import AtomsToData
 from ase.io import Trajectory
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
-from utils import GMPTransformer, ScalerTransformer, bdqm_hpopt_path
+
+from ase import Atoms
+from ase.io import Trajectory
+from tqdm import tqdm
+from hpopt.utils import bdqm_hpopt_path, split_data
+
+from tqdm.contrib import tenumerate
+import re
+import json
+
+def get_electron_densities() -> Dict[str, Path]:
+    gaussians_path = bdqm_hpopt_path / "data/GMP/valence_gaussians"
+    regex = r"(.+?)_"
+    return {re.match(regex, p.name).group(1): p for p in gaussians_path.iterdir()}
+
+
+def get_sigmas() -> Dict[int, List[int]]:
+    with open(bdqm_hpopt_path / "data/GMP/sigmas.json") as f:
+        d = json.load(f)
+    return {int(k): v for k,v in d.items()}
+
+ELECTRON_DENSITIES = get_electron_densities()
+SIGMAS = get_sigmas()
+
+class ScalerTransformer:
+    """Scikit-learn compatible wrapper for FeatureScaler and TargetScaler."""
+
+    def __init__(self, cls, *args, **kwargs):
+        self._cls = cls
+        self._cls_args = args
+        self._cls_kwargs = kwargs
+
+    def fit(self, X, y=None):
+        self.scaler = self._cls(X, *self._cls_args, **self._cls_kwargs)
+        return self
+
+    def transform(self, X):
+        return self.scaler.norm(X)
+
+class GMPTransformer:
+    """Scikit-learn compatible wrapper for GMP descriptor."""
+    def __init__(self, n_gaussians, n_mcsh, cutoff, **a2d_kwargs):
+        sigmas=SIGMAS[n_gaussians]
+
+        def mcsh_groups(i): return [1] if i == 0 else list(range(1,i+1))
+
+        MCSHs = {
+            "MCSHs": {
+                str(i): {
+                    "groups": mcsh_groups(i),
+                    "sigmas": sigmas,
+                } for i in range(n_mcsh)
+            },
+            "atom_gaussians": ELECTRON_DENSITIES,
+            "cutoff": cutoff,
+        }
+
+        self.elements = list(ELECTRON_DENSITIES.keys())
+        self.a2d = AtomsToData(
+            descriptor=GMP(MCSHs=MCSHs, elements=self.elements),
+            **a2d_kwargs
+        )
+        self.setup = ("gmp", MCSHs, {"cutoff": cutoff}, self.elements)
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        n = len(X)
+        return [
+            self.a2d.convert(img, idx=idx)
+            for idx, img in tenumerate(
+                X, desc="Calculating descriptors", total=n, unit=" images"
+            )
+        ]
 
 def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
     """
@@ -105,8 +182,9 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
     db.close()
 
 
-def main(data_dir: Path, train_fname: str, valid_fname: str, test_fname: str) -> None:
+def create_lmdbs(train_fname: str, valid_fname: str, test_fname: str) -> None:
     """Calculate features and save to lmdb."""
+    data_dir = bdqm_hpopt_path / "data"
     train_lmdb_path = data_dir / "train.lmdb"
     test_lmdb_path = data_dir / "test.lmdb"
     valid_lmdb_path = data_dir / "valid.lmdb"
@@ -122,21 +200,43 @@ def main(data_dir: Path, train_fname: str, valid_fname: str, test_fname: str) ->
     valid_imgs = Trajectory(data_dir / valid_fname)
     test_imgs = Trajectory(data_dir / test_fname)
 
-    print("\nFitting pipeline & computing features...")
+    print("\nFitting pipeline & computing train features...")
     train_feats, featurizer = mk_feature_pipeline(train_imgs)
+    print("Computing valid features...")
     valid_feats = featurizer.transform(valid_imgs)
+    print("Computing test features...")
     test_feats = featurizer.transform(test_imgs)
 
-    print("\nSaving data...")
+    print("\nSaving train data...")
     save_to_lmdb(train_feats, featurizer, train_lmdb_path)
+    print("\nSaving valid data...")
     save_to_lmdb(test_feats, featurizer, test_lmdb_path)
+    print("\nSaving valid data...")
     save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)
 
+def save_to_traj(imgs: Iterable[Atoms], path: Path):
+    """Save `imgs`"""
+    with Trajectory(path, "w") as t:
+        for img in tqdm(imgs, desc="Writing data to .traj"):
+            t.write(img)
 
-if __name__ == "__main__":
-    main(
-        data_dir=bdqm_hpopt_path / "data",
-        train_fname="train.traj",
-        valid_fname="valid.traj",
-        test_fname="oc20_300_test.traj",
-    )
+
+def create_validation_split(train_fname: str, valid_split: int, train_out_fname: str, valid_out_fname: str) -> None:
+    """Split train into train & valid, save to .traj files."""
+    data_dir = bdqm_hpopt_path / "data"
+
+    valid_traj_path = data_dir / valid_out_fname
+    train_traj_path = data_dir / train_out_fname
+
+    for path in [train_traj_path, valid_traj_path]:
+        if path.exists():
+            print(f"{path} already exists, aborting")
+            return
+
+    print("Loading and splitting data...")
+    train_imgs = Trajectory(data_dir / train_fname)
+    train_imgs, valid_imgs = split_data(train_imgs, valid_pct=valid_split)
+
+    print("\nSaving data...")
+    save_to_traj(train_imgs, train_traj_path)
+    save_to_traj(valid_imgs, valid_traj_path)

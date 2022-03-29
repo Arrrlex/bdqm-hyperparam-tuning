@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N mysqldb
+#PBS -N mysql
 #PBS -l nodes=1:ppn=1
 #PBS -l walltime=02:00:00
 #PBS -q pace-ice

@@ -1,6 +1,6 @@
 import optuna
 from dotenv import dotenv_values
-from utils import bdqm_hpopt_path
+from hpopt.utils import bdqm_hpopt_path
 
 
 def _construct_connection_string() -> str:
@@ -14,20 +14,25 @@ def _construct_connection_string() -> str:
 
 
 CONN_STRING = _construct_connection_string()
-STUDY_NAME = "distributed-amptorch-tuning"
 
 
-def delete(study_name=STUDY_NAME):
+def delete_study(study_name: str):
     optuna.delete_study(study_name=study_name, storage=CONN_STRING)
 
 
-def get_or_create(study_name=STUDY_NAME, with_db=True):
-    params = {
-        "pruner": optuna.pruners.HyperbandPruner(),
-        "sampler": optuna.samplers.CmaEsSampler(n_startup_trials=10),
-        #"sampler": optuna.samplers.TPESampler(n_startup_trials=10),
-        "study_name": study_name,
+def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str):
+    samplers = {
+      "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
+      "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
+      "Random": optuna.samplers.RandomSampler(),
     }
+    
+    pruners = {
+      "Hyperband": optuna.pruners.HyperbandPruner(),
+      "Median": optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=10),
+    }
+
+    params = {"sampler": samplers[sampler], "pruner": pruners[pruner], "study_name": study_name}
 
     if with_db:
         params["storage"] = CONN_STRING
@@ -36,29 +41,14 @@ def get_or_create(study_name=STUDY_NAME, with_db=True):
     return optuna.create_study(**params)
 
 
-def get_best_params(study_name=STUDY_NAME):
+def get_best_params(study_name: str):
     study = get_or_create(study_name=study_name, with_db=True)
     print(f"Best params: {study.best_params} with MAE {study.best_value}")
 
 
-def generate_report(study_name=STUDY_NAME):
+def generate_report(study_name: str):
     study = get_or_create(study_name=study_name, with_db=True)
     fig = optuna.visualization.plot_contour(study, params=["num_layers", "num_nodes"])
     fig.write_image("contour_plot.png")
     
     optuna.visualization.plot_intermediate_values(study).write_image("intermediate.png")
-
-if __name__ == "__main__":
-    import sys
-
-    actions = {
-      "delete": delete,
-      "best-params": get_best_params,
-      "report": generate_report,
-    }
-    def default():
-      print(f"{cmd} not recognised, try one of:", end=" ")
-      print(", ".join(actions.keys()))
-    
-    cmd = sys.argv[1] if len(sys.argv) > 1 else None
-    actions.get(cmd, default)()
