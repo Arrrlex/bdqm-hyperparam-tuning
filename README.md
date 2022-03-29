@@ -33,6 +33,8 @@ Mechanics" (Andrew Medford).
     qsub ~/bdqm-hyperparam-tuning/jobs/interactive-gpu-session.pbs
     ```
 
+    Note: all the following steps must happen inside the interactive job.
+
 5. Activate the conda module:
 
     ```
@@ -54,39 +56,126 @@ Mechanics" (Andrew Medford).
     git checkout BDQM_VIP_2022Feb
     pip install -e .
     ```
+9. **Install MySQL**:
+    1. If you've tried to install MySQL before, delete the old attempt: `rm -rf ~/scratch/db`
+    2. Run:
 
-8. Quit the job:
+        ```
+        $ export SCRATCH=$HOME/scratch
+        $ export DB_DIR=$SCRATCH/db
+        $ mkdir $DB_DIR
 
-    ```
-    exit
-    ```
+        $ cat << EOF > ~/.my.cnf
+        [mysqld]
+        datadir=$DB_DIR
+        socket=$DB_DIR/mysqldb.sock
+        user=$USER
+        symbolic-links=0
+        skip-networking
 
-9. Install MySQL, following [these instructions](https://docs.pace.gatech.edu/software/mysql/) (in particular the “multi-node access” section)
+        [mysqld_safe]
+        log-error=$DB_DIR/mysqldb.log
+        pid-file=$DB_DIR/mysqldb.pid
+
+        [mysql]
+        socket=$DB_DIR/mysqldb.sock
+        EOF
+        ```
+    3. Run `mysql_install_db --datadir=$DB_DIR`
+    4. Run `mysqld_safe &`
+    5. Choose a password and make a note of it
+    5. Run this, **replacing 'my-secure-password' with the password you just
+       chose:
+
+        ```
+        mysql -u root << EOF
+        UPDATE mysql.user SET Password=PASSWORD(RAND()) WHERE User='root';
+        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+        DELETE FROM mysql.user WHERE User='';
+        DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
+        GRANT ALL PRIVILEGES ON *.* TO '$USER'@'%' IDENTIFIED BY 'my-secure-password' WITH GRANT OPTION;
+        FLUSH PRIVILEGES;
+        EOF
+        ```
+
+    6. Run `mysql -u $USER -p`. When prompted, enter your MySQL password.
+    7. At the MySQL prompt, run `CREATE DATABASE hpopt;`
+    8. Exit the MySQL prompt, e.g. run `exit`
+    9. Quit the interactive job, e.g. run `exit` again to get back to the login
+       node.
+
 10. Create a file `~/bdqm-hyperparam-tuning/.env` with the following contents:
 
     ```
     MYSQL_USERNAME=... # your gatech username
     MYSQL_PASSWORD=... # the mysql password you set in step 9
     HPOPT_DB=hpopt
+    MYSQL_NODE=placeholder
     ```
 
-### Running Code Interactively
+### First Steps Running Hyperparameter Optimization Code
 
-1. Activate VPN
-2. SSH into login node
-3. Start an interactive job:
+1. Activate VPN, SSH into login node
+2. Start an interactive job:
 
     ```
     qsub ~/bdqm-hyperparam-tuning/jobs/interactive-gpu-session.pbs
     ```
 
-4. Set up the conda environment:
+3. Change to the hyperparam tuning directory:
 
     ```
-    source ~/bdqm-hyperparam-tuning/setup-session.sh
+    cd bdqm-hyperparam-tuning
     ```
 
-5. Run some code
+3. Set up the conda environment:
+
+    ```
+    source setup-session.sh
+    ```
+
+4. First, we have to generate the LMDB files:
+
+    ```
+    hpopt create-lmdbs
+    ```
+
+5. Next, try running a small tuning job on the current node:
+
+    ```
+    hpopt tune --n-trials=1 --n-epochs=5
+    ```
+
+    If that worked, congrats! You managed to train a simple AmpTORCH model on
+    a GPU on PACE ICE.
+
+6. The next step is to trigger a tuning job on a single, remote node. Run:
+
+    ```
+    hpopt run-tuning-jobs --n-jobs=1 --n-trials-per-job=1
+    ```
+
+    You can check on your progress by running:
+
+    ```
+    hpopt view-running-jobs
+    ```
+
+    Take a look at the `name` column. You should see:
+
+    - One job named `mysql` (That's where the database is running)
+    - Two jobs named `tune-amptorch-hy` (That's the hyperparam tuning jobs)
+    - One job named `interactive-gpu-` (That's your current node)
+
+    In the column `status`, you'll see `R` (running) or `Q` (queued).
+
+    If you don't see your jobs at all, they might have already finished. You can
+    see all your jobs, including finished ones, by running `qstat -u $USER`.
+
+    Once finished, take a look at the stderr log files - they should have a name
+    like `tune-amptorch-hyperparams.e123456` where `123456` will be the job's
+    ID. If the job had an error, you'll see a traceback in that file.
+
 
 ### Running Parallel Hyperparameter Tuning Jobs
 
