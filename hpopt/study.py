@@ -5,7 +5,7 @@ from hpopt.utils import bdqm_hpopt_path
 
 
 def _construct_connection_string() -> str:
-    """Construct DB connection string from .env file"""
+    """Construct DB connection string from .env file."""
     config = dotenv_values(bdqm_hpopt_path / ".env")
     username = config["MYSQL_USERNAME"]
     password = config["MYSQL_PASSWORD"]

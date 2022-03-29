@@ -1,6 +1,4 @@
-"""
-Contains code for scheduling and viewing PACE jobs.
-"""
+"""Contains code for scheduling and viewing PACE jobs."""
 
 import re
 import subprocess

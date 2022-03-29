@@ -1,17 +1,13 @@
-import sys
 import warnings
 from uuid import uuid4
 
 import numpy as np
-import torch
-from amptorch.dataset_lmdb import get_lmdb_dataset
 from amptorch.trainer import AtomsTrainer
 from ase.io import Trajectory
 from optuna.integration.skorch import SkorchPruningCallback
 from sklearn.metrics import mean_absolute_error
 from torch import nn
 
-from hpopt.study import get_or_create_study
 from hpopt.utils import bdqm_hpopt_path, gpus
 
 data_path = bdqm_hpopt_path / "data"

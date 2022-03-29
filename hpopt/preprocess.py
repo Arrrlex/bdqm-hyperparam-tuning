@@ -1,7 +1,5 @@
 """
-Script to pre-generate features and save in lmdb format.
-
-This lets us save time during hyperparameter optimization.
+Functions and classes for preprocessing data.
 """
 
 import json
@@ -11,7 +9,6 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 import lmdb
-import numpy as np
 import torch
 from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData, FeatureScaler, TargetScaler
@@ -98,7 +95,7 @@ class GMPTransformer:
 
 def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
     """
-    Compute scaled feature values for train data
+    Compute scaled feature values for train data.
 
     Args:
         train_imgs (Sequence): the training data
@@ -106,7 +103,6 @@ def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
         train_feats (list): the features for the train data
         preprocess_pipeline (Pipeline): the actual pipeline object
     """
-
     featurizer_pipeline = Pipeline(
         steps=[
             (
@@ -219,7 +215,7 @@ def create_lmdbs(train_fname: str, valid_fname: str, test_fname: str) -> None:
 
 
 def save_to_traj(imgs: Iterable[Atoms], path: Path):
-    """Save `imgs`"""
+    """Save `imgs`."""
     with Trajectory(path, "w") as t:
         for img in tqdm(imgs, desc="Writing data to .traj"):
             t.write(img)
