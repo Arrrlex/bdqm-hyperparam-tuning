@@ -63,7 +63,7 @@ Mechanics" (Andrew Medford).
         ```
         $ export SCRATCH=$HOME/scratch
         $ export DB_DIR=$SCRATCH/db
-        $ mkdir $DB_DIR
+        $ mkdir -p $DB_DIR
 
         $ cat << EOF > ~/.my.cnf
         [mysqld]
