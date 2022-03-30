@@ -61,8 +61,7 @@ Mechanics" (Andrew Medford).
     2. Run:
 
         ```
-        $ export SCRATCH=$HOME/scratch
-        $ export DB_DIR=$SCRATCH/db
+        $ export DB_DIR=$HOME/scratch/db
         $ mkdir -p $DB_DIR
 
         $ cat << EOF > ~/.my.cnf
