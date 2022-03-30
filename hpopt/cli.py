@@ -14,10 +14,19 @@ def tune(
     n_epochs: int = 100,
 ):
     """
-    Run hyperparameter tuning on this node (i.e. do not start any jobs).
+    Run HP tuning on this node.
 
     Warning: don't run this on the login node of PACE!
     """
+    from hpopt.study import get_or_create_study
+    from hpopt.train import mk_objective
+    from hpopt.utils import is_login_node
+    
+    if is_login_node:
+        print("Don't run tuning on the login node!")
+        print("Aborting")
+        return
+
     local = "on DB" if with_db else "locally"
     print(f"Running hyperparam tuning {local} with:")
     print(f" - study_name: {study_name}")
@@ -25,9 +34,6 @@ def tune(
     print(f" - sampler: {sampler}")
     print(f" - pruner: {pruner}")
     print(f" - # epochs: {n_epochs}")
-
-    from hpopt.study import get_or_create_study
-    from hpopt.train import mk_objective
 
     local = "on DB" if with_db else "locally"
     study = get_or_create_study(

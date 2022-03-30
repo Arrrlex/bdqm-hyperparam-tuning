@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Tuple
+import socket
 
 import numpy as np
 import torch
@@ -11,7 +12,7 @@ bdqm_hpopt_path = Path(__file__).resolve().parents[1]
 gpus = min(1, torch.cuda.device_count())
 
 
-def split_data(data: Sequence, valid_pct: float):
+def split_data(data: Sequence, valid_pct: float) -> Tuple[Sequence, Sequence]:
     """
     Split data into train & validation sets.
 
@@ -34,3 +35,7 @@ def split_data(data: Sequence, valid_pct: float):
     train_data = [data[i] for i in train_indices]
     valid_data = [data[i] for i in valid_indices]
     return train_data, valid_data
+
+def is_login_node() -> bool:
+    """Return true if current node is login node"""
+    return socket.gethostname() == "login-pace-ice-1.pace.gatech.edu" 
