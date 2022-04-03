@@ -18,8 +18,7 @@ y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
 
 warnings.simplefilter("ignore")
 
-
-def get_param_dict(params, trial, name, lower, upper, *args, **kwargs):
+def get_param_dict(params, trial, name, low, *args, **kwargs):
     """
     Get value of parameter as dictionary, either from params dictionary or from trial.
 
@@ -27,8 +26,7 @@ def get_param_dict(params, trial, name, lower, upper, *args, **kwargs):
         params: dict str -> int|float mapping param name to value
         trial: optuna trial
         name: name of param
-        lower, upper: arguments for trial.suggest_int or trial.suggest_float
-        *args, **kwargs: more arguments for trial.suggest_int or trial.suggest_float
+        *args, **kwargs: arguments for trial.suggest_int or trial.suggest_float
 
     Returns:
         dictionary str -> int|float mapping `name` to its value.
@@ -36,16 +34,16 @@ def get_param_dict(params, trial, name, lower, upper, *args, **kwargs):
     try:
         val = params[name]
     except KeyError:
-        param_type = type(lower).__name__
+        param_type = type(low).__name__
         method = getattr(trial, f"suggest_{param_type}")
-        val = method(name, lower, upper, *args, **kwargs)
+        val = method(name, low, *args, **kwargs)
 
     return {name: val}
 
 
 def mk_objective(verbose, epochs, **params):
     def objective(trial):
-        get = partial(get_param_dict, trial=trial, params=params)
+        get = partial(get_param_dict, params, trial)
         config = {
             "model": {
                 **get("num_layers", 3, 8),
