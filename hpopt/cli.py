@@ -21,7 +21,7 @@ def tune(
     from hpopt.study import get_or_create_study
     from hpopt.train import mk_objective
     from hpopt.utils import is_login_node
-    
+
     if is_login_node():
         print("Don't run tuning on the login node!")
         print("Aborting")
@@ -87,6 +87,17 @@ def generate_report(name: str = "distributed-amptorch-tuning"):
 
     generate_report(name)
 
+@app.command()
+def study_summaries():
+    from hpopt.study import get_all_studies
+    studies = get_all_studies()
+    for study in studies:
+        print(f"Study {study.study_name}:")
+        print(f"  Params:")
+        for param in study.best_trial.params:
+            print(f"    - {param}")
+        print(f"  Best score: {study.best_trial.value}")
+        print(f"  Num trials: {study.n_trials}")
 
 @app.command()
 def run_tuning_jobs(
