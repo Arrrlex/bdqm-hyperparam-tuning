@@ -146,4 +146,7 @@ def view_running_jobs(name: str = None):
         else:
             print(f"No running jobs with name {name}.")
     else:
-        print(running_jobs)
+        cols = [
+            "id", "username", "queue", "name", "time", "elapsed", "status", "node"
+        ]
+        print(running_jobs[cols].set_index("id"))
