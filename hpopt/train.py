@@ -7,6 +7,7 @@ from ase.io import Trajectory
 from optuna.integration.skorch import SkorchPruningCallback
 from sklearn.metrics import mean_absolute_error
 from torch import nn
+from functools import partial
 
 from hpopt.utils import bdqm_hpopt_path, gpus
 
@@ -17,32 +18,55 @@ y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
 
 warnings.simplefilter("ignore")
 
+def get_param_dict(params, trial, name, lower, upper, *args, **kwargs):
+    """
+    Get value of parameter as dictionary, either from params dictionary or from trial.
 
-def mk_objective(epochs, verbose):
+    Args:
+        params: dict str -> int|float mapping param name to value
+        trial: optuna trial
+        name: name of param
+        lower, upper: arguments for trial.suggest_int or trial.suggest_float
+        *args, **kwargs: more arguments for trial.suggest_int or trial.suggest_float
+
+    Returns:
+        dictionary str -> int|float mapping `name` to its value.
+    """
+    try:
+        val = params[name]
+    except KeyError:
+        param_type = type(lower).__name__
+        method = getattr(trial, f"suggest_{param_type}")
+        val = method(name, lower, upper, *args, **kwargs)
+
+    return {name: val}
+
+def mk_objective(verbose, epochs, **params):
     def objective(trial):
+        get = partial(get_param_dict, trial=trial, params=params)
         config = {
             "model": {
-                "num_layers": trial.suggest_int("num_layers", 3, 30),
-                "num_nodes": trial.suggest_int("num_nodes", 4, 200),
+                **get("num_layers", 3, 30),
+                **get("num_nodes", 4, 200),
                 "name": "singlenn",
                 "get_forces": False,
-                "batchnorm": trial.suggest_int("batchnorm", 0, 1),
+                **get("batchnorm", 0, 1),
                 "dropout": 1,
-                "dropout_rate": trial.suggest_float("dropout_rate", 0.0, 1.0),
+                **get("dropout_rate", 0.0, 1.0),
                 "initialization": "xavier",
                 "activation": nn.Tanh,
             },
             "optim": {
                 "gpus": gpus,
-                "lr": trial.suggest_float("lr", 1e-5, 1e-2, log=True),
+                **get("lr", 1e-5, 1e-2, log=True),
                 "scheduler": {
                     "policy": "StepLR",
                     "params": {
-                        "step_size": trial.suggest_int("lr_step_size", 1, 30, 5),
-                        "gamma": trial.suggest_float("lr_gamma", 1e-5, 1e-1, log=True),
+                        **get("lr_step_size", 1, 30, 5),
+                        **get("lr_gamma", 1e-5, 1e-1, log=True),
                     },
                 },
-                "batch_size": trial.suggest_int("batch_size", 100, 500, 50),
+                **get("batch_size", 100, 500, 50),
                 "loss": "mae",
                 "epochs": epochs,
             },
