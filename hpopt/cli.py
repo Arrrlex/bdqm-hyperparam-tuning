@@ -22,7 +22,7 @@ def tune(
     from hpopt.train import mk_objective
     from hpopt.utils import is_login_node
     
-    if is_login_node:
+    if is_login_node():
         print("Don't run tuning on the login node!")
         print("Aborting")
         return
