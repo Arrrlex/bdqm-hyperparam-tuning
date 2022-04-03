@@ -101,6 +101,7 @@ def get_or_start(job_name):
             time.sleep(10)
             return get_or_start(job_name)
         print(f"{job_name} running, job ID: {job.id}")
+        time.sleep(5)
         return job
     elif len(jobs) > 1:
         print(f"More than 1 {job_name} jobs running - aborting")
