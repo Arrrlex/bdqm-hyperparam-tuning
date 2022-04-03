@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 import typer
 
 app = typer.Typer()
@@ -15,12 +17,10 @@ def tune(
 ):
     """
     Run HP tuning on this node.
-
-    Warning: don't run this on the login node of PACE!
     """
     from hpopt.study import get_or_create_study
     from hpopt.train import mk_objective
-    from hpopt.utils import is_login_node
+    from hpopt.utils import is_login_node, read_params_from_env
 
     if is_login_node():
         print("Don't run tuning on the login node!")
@@ -33,13 +33,18 @@ def tune(
     print(f" - n_trials: {n_trials}")
     print(f" - sampler: {sampler}")
     print(f" - pruner: {pruner}")
-    print(f" - # epochs: {n_epochs}")
+    print(f" - num epochs: {n_epochs}")
 
-    local = "on DB" if with_db else "locally"
+    params_dict = read_params_from_env()
+    if params_dict:
+        print(f" - params:")
+        for k,v in params_dict.items():
+            print(f"   - {k}: {v}")
+
     study = get_or_create_study(
         study_name=study_name, with_db=with_db, pruner=pruner, sampler=sampler
     )
-    objective = mk_objective(verbose=verbose, epochs=n_epochs)
+    objective = mk_objective(verbose=verbose, epochs=n_epochs, **params_dict)
     study.optimize(objective, n_trials=n_trials)
 
 
@@ -75,16 +80,18 @@ def train_valid_split(
 
 
 @app.command()
-def delete_study(name: str = "distributed-amptorch-tuning"):
+def delete_study(study_names: List[str]):
     from hpopt.jobs import ensure_mysql_running
     from hpopt.study import delete_study
 
     ensure_mysql_running()
-    delete_study(name)
+    for name in study_names:
+        delete_study(name)
+        print(f"Deleted study {name}.")
 
 
 @app.command()
-def generate_report(name: str = "distributed-amptorch-tuning"):
+def generate_report(name: str):
     from hpopt.jobs import ensure_mysql_running
     from hpopt.study import generate_report
 
@@ -93,7 +100,7 @@ def generate_report(name: str = "distributed-amptorch-tuning"):
 
 
 @app.command()
-def study_summaries():
+def view_all_studies():
     from hpopt.jobs import ensure_mysql_running
     from hpopt.study import get_all_studies
 
@@ -114,8 +121,10 @@ def run_tuning_jobs(
     n_jobs: int = 5,
     n_trials_per_job: int = 5,
     study_name: str = "distributed-amptorch-tuning",
-    pruner="Median",
-    sampler="CmaEs",
+    pruner: str="Median",
+    sampler: str="CmaEs",
+    n_epochs: int = 100,
+    params: str = ""
 ):
     from hpopt.jobs import run_tuning_jobs
 
@@ -125,6 +134,8 @@ def run_tuning_jobs(
         study_name=study_name,
         pruner=pruner,
         sampler=sampler,
+        params=params,
+        n_epochs=n_epochs,
     )
 
 

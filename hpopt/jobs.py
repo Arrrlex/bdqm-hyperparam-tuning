@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from hpopt.utils import bdqm_hpopt_path
+from hpopt.utils import bdqm_hpopt_path, parse_params
 
 
 def to_path(job_name: str) -> Path:
@@ -85,7 +85,7 @@ def get_running_jobs(job_name: str = None):
     return jobs
 
 
-def get_or_start(job_name):
+def get_or_start(job_name, just_queued=False):
     """
     Check if a job with name `job_name` is running, and if not queue it and wait for
     it to start.
@@ -99,9 +99,10 @@ def get_or_start(job_name):
         if job.status == "Q":
             print(f"Waiting for {job_name} job {job.id} to start...")
             time.sleep(10)
-            return get_or_start(job_name)
+            return get_or_start(job_name, just_queued=just_queued)
         print(f"{job_name} running, job ID: {job.id}")
-        time.sleep(5)
+        if just_queued:
+            time.sleep(5)
         return job
     elif len(jobs) > 1:
         print(f"More than 1 {job_name} jobs running - aborting")
@@ -109,7 +110,7 @@ def get_or_start(job_name):
     else:
         print(f"Starting {job_name} job")
         queue_job(job_name)
-        return get_or_start(job_name)
+        return get_or_start(job_name, just_queued=True)
 
 
 def update_dotenv_file(node):
@@ -135,7 +136,7 @@ def ensure_mysql_running():
 
 
 def run_tuning_jobs(
-    n_jobs: int, n_trials_per_job: int, study_name: str, pruner: str, sampler: str
+    n_jobs: int, n_trials_per_job: int, study_name: str, pruner: str, sampler: str, params: str, n_epochs: int
 ):
     """
     Run multiple hyperparam tuning jobs with the given hyper-hyperparameters.
@@ -144,6 +145,7 @@ def run_tuning_jobs(
     print(f"Study_name: {study_name}, pruner: {pruner}, sampler: {sampler}")
 
     ensure_mysql_running()
+    params_dict = parse_params(params, prefix="param_")
 
     for _ in range(n_jobs):
         queue_job(
@@ -152,4 +154,6 @@ def run_tuning_jobs(
             study_name=study_name,
             pruner=pruner,
             sampler=sampler,
+            n_epochs=n_epochs,
+            **params_dict
         )

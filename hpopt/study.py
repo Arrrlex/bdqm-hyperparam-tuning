@@ -34,7 +34,7 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
         "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
         "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
         "Random": optuna.samplers.RandomSampler(),
-        "Grid": optuna.samplers.GridSampler(search_space={"num_layers": [3, 8], "num_nodes": [4, 15]}),
+        "Grid": optuna.samplers.GridSampler(search_space={"num_layers": range(3, 9), "num_nodes": range(4, 16)}),
     }
 
     pruners = {
