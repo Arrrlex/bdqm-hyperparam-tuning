@@ -76,20 +76,28 @@ def train_valid_split(
 
 @app.command()
 def delete_study(name: str = "distributed-amptorch-tuning"):
+    from hpopt.jobs import ensure_mysql_running
     from hpopt.study import delete_study
 
+    ensure_mysql_running()
     delete_study(name)
 
 
 @app.command()
 def generate_report(name: str = "distributed-amptorch-tuning"):
+    from hpopt.jobs import ensure_mysql_running
     from hpopt.study import generate_report
 
+    ensure_mysql_running()
     generate_report(name)
 
 @app.command()
 def study_summaries():
+    from hpopt.jobs import ensure_mysql_running
     from hpopt.study import get_all_studies
+
+    ensure_mysql_running()
+
     studies = get_all_studies()
     for study in studies:
         print(f"Study {study.study_name}:")
