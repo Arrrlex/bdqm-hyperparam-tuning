@@ -208,7 +208,7 @@ def create_lmdbs(train_fname: str, valid_fname: str, test_fname: str) -> None:
 
     print("\nSaving train data...")
     save_to_lmdb(train_feats, featurizer, train_lmdb_path)
-    print("\nSaving valid data...")
+    print("\nSaving test data...")
     save_to_lmdb(test_feats, featurizer, test_lmdb_path)
     print("\nSaving valid data...")
     save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)
