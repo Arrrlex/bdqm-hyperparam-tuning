@@ -24,8 +24,10 @@ def delete_study(study_name: str):
 def get_study(study_name: str):
     return optuna.load_study(study_name=study_name, storage=CONN_STRING)
 
+
 def get_all_studies():
     return optuna.get_all_study_summaries(storage=CONN_STRING)
+
 
 def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str):
     samplers = {

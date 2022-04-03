@@ -1,6 +1,6 @@
+import socket
 from pathlib import Path
 from typing import Sequence, Tuple
-import socket
 
 import numpy as np
 import torch
@@ -36,6 +36,7 @@ def split_data(data: Sequence, valid_pct: float) -> Tuple[Sequence, Sequence]:
     valid_data = [data[i] for i in valid_indices]
     return train_data, valid_data
 
+
 def is_login_node() -> bool:
     """Return true if current node is login node"""
-    return socket.gethostname() == "login-pace-ice-1.pace.gatech.edu" 
+    return socket.gethostname() == "login-pace-ice-1.pace.gatech.edu"

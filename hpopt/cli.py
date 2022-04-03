@@ -91,6 +91,7 @@ def generate_report(name: str = "distributed-amptorch-tuning"):
     ensure_mysql_running()
     generate_report(name)
 
+
 @app.command()
 def study_summaries():
     from hpopt.jobs import ensure_mysql_running
@@ -106,6 +107,7 @@ def study_summaries():
             print(f"    - {param}")
         print(f"  Best score: {study.best_trial.value}")
         print(f"  Num trials: {study.n_trials}")
+
 
 @app.command()
 def run_tuning_jobs(

@@ -1,4 +1,5 @@
 import warnings
+from functools import partial
 from uuid import uuid4
 
 import numpy as np
@@ -7,7 +8,6 @@ from ase.io import Trajectory
 from optuna.integration.skorch import SkorchPruningCallback
 from sklearn.metrics import mean_absolute_error
 from torch import nn
-from functools import partial
 
 from hpopt.utils import bdqm_hpopt_path, gpus
 
@@ -17,6 +17,7 @@ valid_imgs = Trajectory(data_path / "valid.traj")
 y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
 
 warnings.simplefilter("ignore")
+
 
 def get_param_dict(params, trial, name, lower, upper, *args, **kwargs):
     """
@@ -40,6 +41,7 @@ def get_param_dict(params, trial, name, lower, upper, *args, **kwargs):
         val = method(name, lower, upper, *args, **kwargs)
 
     return {name: val}
+
 
 def mk_objective(verbose, epochs, **params):
     def objective(trial):
