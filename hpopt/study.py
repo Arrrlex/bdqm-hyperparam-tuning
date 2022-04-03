@@ -30,11 +30,13 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
         "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
         "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
         "Random": optuna.samplers.RandomSampler(),
+        "Grid": optuna.samplers.GridSampler(),
     }
 
     pruners = {
         "Hyperband": optuna.pruners.HyperbandPruner(),
         "Median": optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=10),
+        "None": optuna.pruners.NopPruner(),
     }
 
     params = {
