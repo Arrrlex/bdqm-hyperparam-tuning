@@ -136,7 +136,13 @@ def ensure_mysql_running():
 
 
 def run_tuning_jobs(
-    n_jobs: int, n_trials_per_job: int, study_name: str, pruner: str, sampler: str, params: str, n_epochs: int
+    n_jobs: int,
+    n_trials_per_job: int,
+    study_name: str,
+    pruner: str,
+    sampler: str,
+    params: str,
+    n_epochs: int,
 ):
     """
     Run multiple hyperparam tuning jobs with the given hyper-hyperparameters.
@@ -155,5 +161,5 @@ def run_tuning_jobs(
             pruner=pruner,
             sampler=sampler,
             n_epochs=n_epochs,
-            **params_dict
+            **params_dict,
         )

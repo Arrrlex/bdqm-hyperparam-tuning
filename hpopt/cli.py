@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 import typer
 
@@ -38,7 +38,7 @@ def tune(
     params_dict = read_params_from_env()
     if params_dict:
         print(f" - params:")
-        for k,v in params_dict.items():
+        for k, v in params_dict.items():
             print(f"   - {k}: {v}")
 
     study = get_or_create_study(
@@ -121,10 +121,10 @@ def run_tuning_jobs(
     n_jobs: int = 5,
     n_trials_per_job: int = 5,
     study_name: str = "distributed-amptorch-tuning",
-    pruner: str="Median",
-    sampler: str="CmaEs",
+    pruner: str = "Median",
+    sampler: str = "CmaEs",
     n_epochs: int = 100,
-    params: str = ""
+    params: str = "",
 ):
     from hpopt.jobs import run_tuning_jobs
 
@@ -157,7 +157,5 @@ def view_running_jobs(name: str = None):
         else:
             print(f"No running jobs with name {name}.")
     else:
-        cols = [
-            "id", "username", "queue", "name", "time", "elapsed", "status", "node"
-        ]
+        cols = ["id", "username", "queue", "name", "time", "elapsed", "status", "node"]
         print(running_jobs[cols].set_index("id"))

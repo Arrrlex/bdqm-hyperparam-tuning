@@ -1,7 +1,7 @@
+import os
 import socket
 from pathlib import Path
-from typing import Any, Sequence, Tuple, Dict
-import os
+from typing import Any, Dict, Sequence, Tuple
 
 import numpy as np
 import torch
@@ -42,6 +42,7 @@ def is_login_node() -> bool:
     """Return true if current node is login node"""
     return socket.gethostname() == "login-pace-ice-1.pace.gatech.edu"
 
+
 def _cast(s):
     if s.isnumeric():
         return int(s)
@@ -50,22 +51,24 @@ def _cast(s):
     except ValueError:
         return s
 
+
 def read_params_from_env() -> Dict[str, Any]:
     params = {}
     print(os.environ)
-    for k,v in os.environ.items():
-        if k.startswith('param_'):
-            k = k[len('param_'):]
+    for k, v in os.environ.items():
+        if k.startswith("param_"):
+            k = k[len("param_") :]
         else:
             continue
         params[k] = _cast(v)
     return params
+
 
 def parse_params(param_string, prefix) -> Dict[str, Any]:
     if not param_string:
         return {}
     params = {}
     for param_pair in param_string.split(","):
-        k,v = param_pair.split("=")
+        k, v = param_pair.split("=")
         params[prefix + k] = _cast(v)
     return params
