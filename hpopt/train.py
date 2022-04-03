@@ -46,8 +46,8 @@ def mk_objective(verbose, epochs, **params):
         get = partial(get_param_dict, trial=trial, params=params)
         config = {
             "model": {
-                **get("num_layers", 3, 30),
-                **get("num_nodes", 4, 200),
+                **get("num_layers", 3, 8),
+                **get("num_nodes", 4, 15),
                 "name": "singlenn",
                 "get_forces": False,
                 **get("batchnorm", 0, 1),
