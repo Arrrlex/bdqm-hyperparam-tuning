@@ -60,13 +60,13 @@ def mk_objective(verbose, epochs, **params):
             "optim": {
                 "gpus": gpus,
                 **get("lr", 1e-5, 1e-2, log=True),
-                # "scheduler": {
-                #     "policy": "StepLR",
-                #     "params": {
-                #         **get("lr_step_size", 1, 30, 5),
-                #         **get("lr_gamma", 1e-5, 1e-1, log=True),
-                #     },
-                # },
+                 "scheduler": {
+                     "policy": "StepLR",
+                     "params": {
+                         **get("step_size", 1, 30, 5),
+                         **get("gamma", 1e-5, 1e-1, log=True),
+                     },
+                 },
                 **get("batch_size", 100, 500, 50),
                 "loss": "mae",
                 "epochs": epochs,
