@@ -1,19 +1,18 @@
-from typing import List, Optional
+from typing import List, Union, Literal
 
 import typer
 
 app = typer.Typer()
 
-
 @app.command()
 def tune(
-    n_trials: int = 10,
-    study_name: str = "distributed-amptorch-tuning",
-    with_db: bool = False,
-    pruner: str = "Median",
-    sampler: str = "CmaEs",
-    verbose: bool = False,
-    n_epochs: int = 100,
+    n_trials: int = typer.Option(10, help="number of trials (num of models to train)"),
+    study_name: str = typer.Option(None, help="name of the study (required if with_db=True)"),
+    with_db: bool = typer.Option(False, help="store trials on MySQL database, or locally to this job"),
+    pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
+    sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
+    verbose: bool = typer.Option(False, help="Whether or not to log the per-epoch results"),
+    n_epochs: int = typer.Option(100, help="number of epochs for each trial")
 ):
     """
     Run HP tuning on this node.
@@ -31,23 +30,25 @@ def tune(
     The hyperparameter `num_layers` will then be set to 5 during the hyperparameter
     optimization.
 
-    Args:
-        n_trials: number of trials (num of models to train)
-        study_name: name of the study (only relevant if with_db is True)
-        with_db: [True|False] store trials on MySQL database, or locally to this job
-        pruner: [Median|Hyperband|None] which pruning algorithm to use:
-          - Median waits for 10 trials, then prunes the trial if, after 10 epochs,
-            the MAE is higher than the median of the previous trials
-          - Hyperband uses a Multi-Armed Bandit approach to pruning trials
-          - None doesn't prune trials
-        sampler: [CmaEs|TPE|Random|Grid] which sampling algorithm to use:
-          - CmaEs uses the Lightweight Covariance Matrix Adaptation Evolution Strategy
-          - TPE uses the Tree-Structured Parzen Estimator
-          - Random uses a random search
-          - Grid uses a grid search (note: the code in study.py must be modified in
-            to change the search space for Grid search)
-        verbose: [True|False] Whether or not to log the per-epoch results
-        n_epochs: number of epochs for each trial.
+    ## Pruners
+
+    - Median waits for 10 trials, then prunes the trial if, after 10 epochs,
+    the MAE is higher than the median of the previous trials
+
+    - Hyperband uses a Multi-Armed Bandit approach to pruning trials
+
+    - None doesn't prune trials
+
+    ## Samplers
+
+    - CmaEs uses the Lightweight Covariance Matrix Adaptation Evolution Strategy
+
+    - TPE uses the Tree-Structured Parzen Estimator
+
+    - Random uses a random search
+
+    - Grid uses a grid search (note: the code in study.py must be modified in
+    to change the search space for Grid search)
     """
     from hpopt.study import get_or_create_study
     from hpopt.train import mk_objective
@@ -87,11 +88,6 @@ def create_lmdbs(
     Precompute GMP features and save to LMDB.
 
     Writes to train.lmdb, valid.lmdb and test.lmdb in the data directory.
-
-    Args:
-        train: the training data .traj file to use
-        valid: the validation data .traj file to use
-        test: the testing data .traj file to use
     """
     print(f"Creating lmdbs from files {train}, {valid}, {test}")
     from hpopt.preprocess import create_lmdbs
@@ -101,20 +97,12 @@ def create_lmdbs(
 
 @app.command()
 def train_valid_split(
-    train: str = "oc20_3k_train.traj",
-    valid_split: float = 0.1,
-    train_out_fname: str = "train.traj",
-    valid_out_fname: str = "valid.traj",
+    train: str = typer.Option("oc20_3k_train.traj", help="the input dataset"),
+    valid_split: float = typer.Option(0.1, help="proportion of dataset to split off for validation"),
+    train_out_fname: str = typer.Option("train.traj", help="filename to write output train dataset to"),
+    valid_out_fname: str = typer.Option("valid.traj", help="filename to write output valid dataset to"),
 ) -> None:
-    """
-    Split the dataset into train & valid sets.
-
-    Args:
-        train: the input dataset
-        valid_split: proportion of the dataset to split off into a validation set
-        train_out_fname: filename to write the output train dataset to
-        valid_out_fname: filename to write the output valid dataset to
-    """
+    """Split the dataset into train & valid sets."""
     print(f"Splitting {train}:")
     print(f"  {(1-valid_split)*100:.1f}% into {train_out_fname}")
     print(f"  {valid_split*100:.1f}% into {valid_out_fname}")
@@ -179,37 +167,38 @@ def view_all_studies():
 
 @app.command()
 def run_tuning_jobs(
-    n_jobs: int = 5,
-    n_trials_per_job: int = 5,
-    study_name: str = "distributed-amptorch-tuning",
-    pruner: str = "Median",
-    sampler: str = "CmaEs",
-    n_epochs: int = 100,
-    params: str = "",
+    study_name: str = typer.Option(..., help="name of the study"),
+    n_jobs: int = typer.Option(5, help="Number of PACE jobs to run"),
+    n_trials_per_job: int = typer.Option(10, help="number of trials (num of models to train)"),
+    pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
+    sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
+    n_epochs: int = typer.Option(100, help="number of epochs for each trial"),
+    params: str = typer.Option("", help="comma-separated list of key=value HP pairs"),
 ):
     """
     Run multiple hyperparameter tuning PACE jobs.
 
     If the study name already exists, this command will add extra trials to that DB.
 
-    Args:
-        n_jobs: how many PACE jobs to run
-        n_trials_per_job: number of trials for each job to run
-        study_name: name of the study in the DB to create or attach to.
-        pruner: [Median|Hyperband|None] which pruning algorithm to use:
-          - Median waits for 10 trials, then prunes the trial if, after 10 epochs,
-            the MAE is higher than the median of the previous trials
-          - Hyperband uses a Multi-Armed Bandit approach to pruning trials
-          - None doesn't prune trials
-        sampler: [CmaEs|TPE|Random|Grid] which sampling algorithm to use:
-          - CmaEs uses the Lightweight Covariance Matrix Adaptation Evolution Strategy
-          - TPE uses the Tree-Structured Parzen Estimator
-          - Random uses a random search
-          - Grid uses a grid search (note: the code in study.py must be modified in
-            to change the search space for Grid search)
-        n_epochs: number of epochs for each trial.
-        params: comma-separated list of "key=value" pairs, for fixing some
-          hyperparameter values during the optimization.
+    ## Pruners
+
+    - Median waits for 10 trials, then prunes the trial if, after 10 epochs,
+    the MAE is higher than the median of the previous trials
+
+    - Hyperband uses a Multi-Armed Bandit approach to pruning trials
+
+    - None doesn't prune trials
+
+    ## Samplers
+
+    - CmaEs uses the Lightweight Covariance Matrix Adaptation Evolution Strategy
+
+    - TPE uses the Tree-Structured Parzen Estimator
+
+    - Random uses a random search
+
+    - Grid uses a grid search (note: the code in study.py must be modified in
+    to change the search space for Grid search)
     """
     from hpopt.jobs import run_tuning_jobs
 
