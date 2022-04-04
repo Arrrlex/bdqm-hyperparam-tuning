@@ -4,15 +4,22 @@ import typer
 
 app = typer.Typer()
 
+
 @app.command()
 def tune(
     n_trials: int = typer.Option(10, help="number of trials (num of models to train)"),
-    study_name: str = typer.Option(None, help="name of the study (required if with_db=True)"),
-    with_db: bool = typer.Option(False, help="store trials on MySQL database, or locally to this job"),
+    study_name: str = typer.Option(
+        None, help="name of the study (required if with_db=True)"
+    ),
+    with_db: bool = typer.Option(
+        False, help="store trials on MySQL database, or locally to this job"
+    ),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
-    verbose: bool = typer.Option(False, help="Whether or not to log the per-epoch results"),
-    n_epochs: int = typer.Option(100, help="number of epochs for each trial")
+    verbose: bool = typer.Option(
+        False, help="Whether or not to log the per-epoch results"
+    ),
+    n_epochs: int = typer.Option(100, help="number of epochs for each trial"),
 ):
     """
     Run HP tuning on this node.
@@ -98,9 +105,15 @@ def create_lmdbs(
 @app.command()
 def train_valid_split(
     train: str = typer.Option("oc20_3k_train.traj", help="the input dataset"),
-    valid_split: float = typer.Option(0.1, help="proportion of dataset to split off for validation"),
-    train_out_fname: str = typer.Option("train.traj", help="filename to write output train dataset to"),
-    valid_out_fname: str = typer.Option("valid.traj", help="filename to write output valid dataset to"),
+    valid_split: float = typer.Option(
+        0.1, help="proportion of dataset to split off for validation"
+    ),
+    train_out_fname: str = typer.Option(
+        "train.traj", help="filename to write output train dataset to"
+    ),
+    valid_out_fname: str = typer.Option(
+        "valid.traj", help="filename to write output valid dataset to"
+    ),
 ) -> None:
     """Split the dataset into train & valid sets."""
     print(f"Splitting {train}:")
@@ -169,7 +182,9 @@ def view_all_studies():
 def run_tuning_jobs(
     study_name: str = typer.Option(..., help="name of the study"),
     n_jobs: int = typer.Option(5, help="Number of PACE jobs to run"),
-    n_trials_per_job: int = typer.Option(10, help="number of trials (num of models to train)"),
+    n_trials_per_job: int = typer.Option(
+        10, help="number of trials (num of models to train)"
+    ),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     n_epochs: int = typer.Option(100, help="number of epochs for each trial"),
