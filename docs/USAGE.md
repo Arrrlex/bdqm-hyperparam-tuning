@@ -67,35 +67,24 @@ create_valid_split("oc20_3k_train.traj", valid_split=0.4)
 ### Fingerprinting and Writing to LMDB
 
 Once data has been split, it must be fingerprinted and written to LMDB format.
-This can be done using the `create_lmdbs` function:
+This can be done using the `compute_gmp` function:
 
 ```bash
-ampopt create-lmdbs
+ampopt compute-gmp train.traj valid.traj test.traj
 ```
 
 or
 
 ```python
-from ampopt import create_lmdbs
-create_lmdbs()
+from ampopt import compute_gmp
+compute_gmp("train.traj", "valid.traj", "test.traj")
 ```
 
-By default, the files `train.traj`, `valid.traj` and `test.traj` will be used.
-To specify different file names:
+`compute_gmp` can accept arbitrarily many filenames as arguments, and as few as
+one. Only the first filename will be used to fit the feature & target scalers.
 
-```bash
-ampopt create-lmdbs --train=train2.traj --test=test2.traj --valid=valid2.traj
-```
-
-or
-
-```python
-from ampopt import create_lmdbs
-create_lmdbs(train="train2.traj", valid="valid2.traj", test="test2.traj")
-```
-
-`create_lmdbs` will write to the files `train.lmdb`, `valid.lmdb` and
-`test.lmdb`. This is not configurable.
+`compute_gmp` chooses the output filenames by stripping the suffix (`.traj`)
+and replacing it with `.lmdb`.
 
 
 ## Tuning Hyperparameters

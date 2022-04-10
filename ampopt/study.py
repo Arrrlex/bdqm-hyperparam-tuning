@@ -1,11 +1,13 @@
+from functools import lru_cache
+
 import optuna
 from dotenv import dotenv_values
 
 from ampopt.jobs import ensure_mysql_running
 from ampopt.utils import ampopt_path
 
-
-def _construct_connection_string() -> str:
+@lru_cache
+def connection_string() -> str:
     """Construct DB connection string from .env file."""
     config = dotenv_values(ampopt_path / ".env")
     username = config["MYSQL_USERNAME"]
@@ -15,12 +17,9 @@ def _construct_connection_string() -> str:
     return f"mysql+pymysql://{username}:{password}@{node}/{db}"
 
 
-CONN_STRING = _construct_connection_string()
-
-
 def delete_study(study_name: str):
     ensure_mysql_running()
-    optuna.delete_study(study_name=study_name, storage=CONN_STRING)
+    optuna.delete_study(study_name=study_name, storage=connection_string())
     print(f"Deleted study {study_name}.")
 
 
@@ -30,11 +29,11 @@ def delete_studies(*study_names: str):
 
 
 def get_study(study_name: str):
-    return optuna.load_study(study_name=study_name, storage=CONN_STRING)
+    return optuna.load_study(study_name=study_name, storage=connection_string())
 
 
 def get_all_studies():
-    return optuna.get_all_study_summaries(storage=CONN_STRING)
+    return optuna.get_all_study_summaries(storage=connection_string())
 
 
 def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str):
@@ -60,7 +59,7 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
     }
 
     if with_db:
-        params["storage"] = CONN_STRING
+        params["storage"] = connection_string()
         params["load_if_exists"] = True
 
     return optuna.create_study(**params)

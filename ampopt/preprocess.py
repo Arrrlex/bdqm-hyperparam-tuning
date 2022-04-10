@@ -50,56 +50,76 @@ def create_valid_split(
     save_to_traj(valid_imgs, valid_traj_path)
 
 
-def create_lmdbs(
-    train: str = "train.traj",
-    valid: str = "valid.traj",
-    test: str = "test.traj"
+def compute_gmp(
+    train: str,
+    *others: str
 ) -> None:
-    """Calculate features and save to lmdb."""
-    print(f"Creating lmdbs from files {train}, {valid}, {test}")
+    """Compute GMP features and save to lmdb."""
+    fnames = [train] + list(others)
+    print(f"Creating LMDBs from files {', '.join(fnames)}")
 
     data_dir = ampopt_path / "data"
-    train_lmdb_path = data_dir / "train.lmdb"
-    test_lmdb_path = data_dir / "test.lmdb"
-    valid_lmdb_path = data_dir / "valid.lmdb"
+    lmdb_paths = [data_dir / Path(fname).with_suffix(".lmdb") for fname in fnames]
 
-    for path in [train_lmdb_path, test_lmdb_path, valid_lmdb_path]:
+    for path in lmdb_paths:
         if path.exists():
             print(f"{path} already exists, aborting")
             return
 
     torch.set_default_tensor_type(torch.DoubleTensor)
-    print("Loading data...")
-    train_imgs = Trajectory(data_dir / train)
-    valid_imgs = Trajectory(data_dir / valid)
-    test_imgs = Trajectory(data_dir / test)
 
-    print("\nFitting pipeline & computing train features...")
-    train_feats, featurizer = mk_feature_pipeline(train_imgs)
-    print("Computing valid features...")
-    valid_feats = featurizer.transform(valid_imgs)
-    print("Computing test features...")
-    test_feats = featurizer.transform(test_imgs)
+    print(f"Fitting to {train}...")
+    featurizer = mk_feature_pipeline(Trajectory(data_dir / train))
 
-    print("\nSaving train data...")
-    save_to_lmdb(train_feats, featurizer, train_lmdb_path)
-    print("\nSaving test data...")
-    save_to_lmdb(test_feats, featurizer, test_lmdb_path)
-    print("\nSaving valid data...")
-    save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)
+    for fname, lmdb_fname in zip(fnames, lmdb_paths):
+        print(f"\nLooking at {fname}:")
+        imgs = Trajectory(data_dir / fname)
+        feats = featurizer.transform(imgs)
+        save_to_lmdb(feats, featurizer, lmdb_fname)
 
-@lru_cache
-def electron_densities() -> Dict[str, Path]:
-    gaussians_path = ampopt_path / "data/GMP/valence_gaussians"
-    regex = r"(.+?)_"
-    return {re.match(regex, p.name).group(1): p for p in gaussians_path.iterdir()}
 
-@lru_cache
-def sigmas_dict() -> Dict[int, List[int]]:
-    with open(ampopt_path / "data/GMP/sigmas.json") as f:
-        d = json.load(f)
-    return {int(k): v for k, v in d.items()}
+def mk_feature_pipeline(train_imgs: Sequence) -> Pipeline:
+    """
+    Compute fitted featurizer given train data.
 
+    Args:
+        train_imgs (Sequence): the training data
+    Returns:
+        preprocess_pipeline (Pipeline): the sklearn pipeline object
+    """
+    featurizer_pipeline = Pipeline(
+        steps=[
+            (
+                "GMP",
+                GMPTransformer(
+                    n_gaussians=8,
+                    n_mcsh=3,
+                    cutoff=5,
+                    r_energy=True,
+                    r_forces=True,
+                    save_fps=False,
+                    fprimes=False,
+                ),
+            ),
+            (
+                "FeatureScaler",
+                ScalerTransformer(
+                    FeatureScaler,
+                    forcetraining=False,
+                    scaling={"type": "normalize", "range": (0, 1)},
+                ),
+            ),
+            (
+                "TargetScaler",
+                ScalerTransformer(
+                    TargetScaler,
+                    forcetraining=False,
+                ),
+            ),
+        ]
+    )
+
+    return featurizer_pipeline.fit(train_imgs)
 
 class ScalerTransformer:
     """Scikit-learn compatible wrapper for FeatureScaler and TargetScaler."""
@@ -157,50 +177,17 @@ class GMPTransformer:
         ]
 
 
-def mk_feature_pipeline(train_imgs: Sequence) -> Tuple[Sequence, Pipeline]:
-    """
-    Compute scaled feature values for train data.
+@lru_cache
+def electron_densities() -> Dict[str, Path]:
+    gaussians_path = ampopt_path / "data/GMP/valence_gaussians"
+    regex = r"(.+?)_"
+    return {re.match(regex, p.name).group(1): p for p in gaussians_path.iterdir()}
 
-    Args:
-        train_imgs (Sequence): the training data
-    Returns:
-        train_feats (list): the features for the train data
-        preprocess_pipeline (Pipeline): the actual pipeline object
-    """
-    featurizer_pipeline = Pipeline(
-        steps=[
-            (
-                "GMP",
-                GMPTransformer(
-                    n_gaussians=8,
-                    n_mcsh=3,
-                    cutoff=5,
-                    r_energy=True,
-                    r_forces=True,
-                    save_fps=False,
-                    fprimes=False,
-                ),
-            ),
-            (
-                "FeatureScaler",
-                ScalerTransformer(
-                    FeatureScaler,
-                    forcetraining=False,
-                    scaling={"type": "normalize", "range": (0, 1)},
-                ),
-            ),
-            (
-                "TargetScaler",
-                ScalerTransformer(
-                    TargetScaler,
-                    forcetraining=False,
-                ),
-            ),
-        ]
-    )
-
-    train_feats = featurizer_pipeline.fit_transform(train_imgs)
-    return train_feats, featurizer_pipeline
+@lru_cache
+def sigmas_dict() -> Dict[int, List[int]]:
+    with open(ampopt_path / "data/GMP/sigmas.json") as f:
+        d = json.load(f)
+    return {int(k): v for k, v in d.items()}
 
 
 def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:

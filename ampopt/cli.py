@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import typer
 
@@ -31,17 +31,23 @@ def create_valid_split(
 
 
 @app.command()
-def create_lmdbs(
-    train: str = "train.traj", valid: str = "valid.traj", test: str = "test.traj"
+def compute_gmp(
+    train: str = typer.Argument(..., help=".traj file to fit & compute features for"),
+    others: Optional[List[str]] = typer.Argument(None, help="other .traj files to compute features for")
 ) -> None:
     """
     Precompute GMP features and save to LMDB.
 
-    Writes to train.lmdb, valid.lmdb and test.lmdb in the data directory.
-    """
-    from ampopt.preprocess import create_lmdbs
+    The LMDB files are written to the data directory.
 
-    create_lmdbs(train=train, valid=valid, test=test)
+    Note: only the first argument TRAIN is used to fit the feature pipeline.
+    """
+    if others is None:
+        others = []
+
+    from ampopt.preprocess import compute_gmp
+
+    compute_gmp(train=train, *others)
 
 # Tuning
 

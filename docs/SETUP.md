@@ -130,7 +130,7 @@ Follow these steps to verify that everything is setup correctly.
 4. First, we have to generate the LMDB files:
 
     ```
-    ampopt create-lmdbs
+    ampopt compute-gmp train.traj valid.traj test.traj
     ```
 
 5. Next, try running a small tuning job on the current node:
