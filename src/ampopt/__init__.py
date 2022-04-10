@@ -1,7 +1,7 @@
-from ampopt.jobs import ensure_mysql_running, run_tuning_jobs, show_running_jobs
+from ampopt.jobs import ensure_mysql_running, show_running_jobs, run_pace_tuning_job
 from ampopt.preprocess import compute_gmp
 from ampopt.study import delete_studies, generate_report, view_all_studies
-from ampopt.train import tune
+from ampopt.tuning import tune
 
 __all__ = [
     "tune",
@@ -9,7 +9,7 @@ __all__ = [
     "delete_studies",
     "generate_report",
     "view_all_studies",
-    "run_tuning_jobs",
+    "run_pace_tuning_job",
     "ensure_mysql_running",
     "show_running_jobs",
 ]

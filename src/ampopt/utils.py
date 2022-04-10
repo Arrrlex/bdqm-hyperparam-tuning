@@ -1,3 +1,4 @@
+from functools import lru_cache
 import os
 import socket
 from pathlib import Path
@@ -8,7 +9,10 @@ import torch
 
 # Path to root of bdqm-hyperparam-tuning repo
 ampopt_path = Path(__file__).resolve().parents[2]
-gpus = min(1, torch.cuda.device_count())
+
+@lru_cache
+def num_gpus():
+    return torch.cuda.device_count()
 
 
 def is_login_node() -> bool:
@@ -36,7 +40,7 @@ def read_params_from_env() -> Dict[str, Any]:
     return params
 
 
-def parse_params(param_string, prefix) -> Dict[str, Any]:
+def parse_params(param_string, prefix="") -> Dict[str, Any]:
     if not param_string:
         return {}
     params = {}

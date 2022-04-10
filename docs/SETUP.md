@@ -3,7 +3,10 @@
 This document will take you through setting up your system to run parallel
 GPU-accelerated hyperparameter optimization jobs with `ampopt`.
 
-## One-Time Setup on PACE-ICE
+If you're on the PACE cluster, follow the instructions below ("Setup on PACE").
+Otherwise, skip ahead to the section "Setup on Generic System".
+
+## Setup on PACE
 
 1. Activate the Gatech VPN (https://docs.pace.gatech.edu/gettingStarted/vpn/)
 2. Log in to the login node:
@@ -104,67 +107,121 @@ GPU-accelerated hyperparameter optimization jobs with `ampopt`.
     MYSQL_NODE=placeholder
     ```
 
+## Setup on Generic System
+
+1. Clone repos:
+
+    ```bash
+    git clone https://github.com/Arrrlex/amptorch.git
+    git clone https://github.com/Arrrlex/bdqm-hyperparam-tuning.git
+    ```
+2. Ensure conda is installed
+3. Change to the project directory:
+
+    ```bash
+    cd bdqm-hyperparam-tuning
+    ```
+
+3. Create the conda environment by running either `conda env create -f env_cpu.yml`
+   or `conda env create -f env_gpu.yml` depending on if your system has a GPU
+   available or not.
+
+4. Install both packages locally into the conda environment:
+
+    ```
+    conda activate bdqm-hpopt
+    pip install -e .
+    cd ../amptorch
+    pip install -e .
+    ```
+
+5. **Install MySQL**:
+    1. Instructions vary depending on your platform, but on mac to install mysql
+       you can just run `brew install mysql`.
+    2. Start mysql by running `brew services start mysql` (again, this will
+       be different for linux users).
+    2. Choose a password and make a note of it
+    3. Run this, **replacing 'my-secure-password' with the password you just chose**:
+
+        ```
+        mysql -u root << EOF
+        UPDATE mysql.user SET Password=PASSWORD(RAND()) WHERE User='root';
+        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+        DELETE FROM mysql.user WHERE User='';
+        DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
+        GRANT ALL PRIVILEGES ON *.* TO '$USER'@'%' IDENTIFIED BY 'my-secure-password' WITH GRANT OPTION;
+        FLUSH PRIVILEGES;
+        EOF
+        ```
+    4. Run `mysql -u $USER -p$. When prompted, enter your MySQL password.
+    5. At the MySQL prompt, run `CREATE DATABASE hpopt;`
+    6. Exit the MySQL prompt by running `exit`
+
+6. Create a file `.env` in the `bdqm-hyperparam-tuning` folder with the
+   following contents:
+
+    ```
+    MYSQL_USERNAME=... # your gatech username
+    MYSQL_PASSWORD=... # the mysql password you set in step 8
+    HPOPT_DB=hpopt
+    MYSQL_NODE=localhost
+    ```
+
 ## First Steps Running Hyperparameter Optimization Code
 
 Follow these steps to verify that everything is setup correctly.
 
-1. Activate VPN, SSH into login node
-2. Start an interactive job:
+1. If on PACE:
+    1. Activate VPN, SSH into login node
+    2. Start an interactive job:
+
+        ```
+        qsub ~/bdqm-hyperparam-tuning/jobs/interactive-gpu-session.pbs
+        ```
+
+    3. Change to the project directory:
+
+        ```
+        cd bdqm-hyperparam-tuning
+        ```
+
+    3. Set up the conda environment:
+
+        ```
+        source setup-session.sh
+        ```
+
+    If not on PACE:
+
+    1. Make sure that MySQL is running
+    2. Change to the project directory:
+
+        ```bash
+        cd bdqm-hyperparam-tuning
+        ```
+
+    3. Activate the conda environment:
+
+        ```bash
+        conda activate bdqm-hpopt
+        ```
+
+2. First, we have to generate the LMDB files:
 
     ```
-    qsub ~/bdqm-hyperparam-tuning/jobs/interactive-gpu-session.pbs
+    ampopt compute-gmp data/oc20_3k_train.traj data/oc20_300_test.traj
     ```
 
-3. Change to the project directory:
-
-    ```
-    cd bdqm-hyperparam-tuning
-    ```
-
-3. Set up the conda environment:
-
-    ```
-    source setup-session.sh
-    ```
-
-4. First, we have to generate the LMDB files:
-
-    ```
-    ampopt compute-gmp train.traj valid.traj test.traj
-    ```
-
-5. Next, try running a small tuning job on the current node:
+3. Next, try running a small tuning job on the current node:
 
     ```
     ampopt tune --n-trials=1 --n-epochs=5
     ```
 
-    If that worked, congrats! You managed to train a simple AmpTORCH model on
-    a GPU on PACE ICE.
+    If that worked, congrats! You managed to train a simple AmpTORCH model.
 
-6. The next step is to trigger a tuning job on a single, remote node. Run:
-
-    ```
-    ampopt run-tuning-jobs --n-jobs=1 --n-trials-per-job=1
-    ```
-
-    You can check on your progress by running:
+4. The next step is to run a tuning job backed by a DB:
 
     ```
-    ampopt view-running-jobs
+    ampopt tune --n-trials=1 --n-epochs=5 --with-db
     ```
-
-    Take a look at the `name` column. You should see:
-
-    - One job named `mysql` (That's where the database is running)
-    - Two jobs named `tune-amptorch-hy` (That's the hyperparameter tuning jobs)
-    - One job named `interactive-gpu-` (That's your current node)
-
-    In the column `status`, you'll see `R` (running) or `Q` (queued).
-
-    If you don't see your jobs at all, they might have already finished. You can
-    see all your jobs, including finished ones, by running `qstat -u $USER`.
-
-    Once finished, take a look at the stderr log files - they should have a name
-    like `tune-amptorch-hyperparams.e123456` where `123456` will be the job's
-    ID. If the job had an error, you'll see a traceback in that file.

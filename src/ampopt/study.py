@@ -3,7 +3,6 @@ from functools import lru_cache
 import optuna
 from dotenv import dotenv_values
 
-from ampopt.jobs import ensure_mysql_running
 from ampopt.utils import ampopt_path
 
 @lru_cache
@@ -18,7 +17,6 @@ def connection_string() -> str:
 
 
 def delete_study(study_name: str):
-    ensure_mysql_running()
     optuna.delete_study(study_name=study_name, storage=connection_string())
     print(f"Deleted study {study_name}.")
 

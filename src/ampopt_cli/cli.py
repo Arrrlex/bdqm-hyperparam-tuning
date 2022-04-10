@@ -30,7 +30,8 @@ def compute_gmp(
 
 @app.command()
 def tune(
-    n_trials: int = typer.Option(10, help="number of trials (num of models to train)"),
+    n_jobs: int = typer.Option(1, help="number of jobs to run in parallel"),
+    n_trials_per_job: int = typer.Option(10, help="number of trials (num of models to train) per job"),
     study_name: str = typer.Option(
         None, help="name of the study (required if with_db=True)"
     ),
@@ -46,6 +47,7 @@ def tune(
         False, help="Whether or not to log the per-epoch results"
     ),
     n_epochs: int = typer.Option(100, help="number of epochs for each trial"),
+    params: str = typer.Option("", help="comma-separated list of key=value HP pairs"),
 ):
     """
     Run HP tuning on this node.
@@ -83,10 +85,11 @@ def tune(
     - Grid uses a grid search (note: the code in study.py must be modified in
     to change the search space for Grid search)
     """
-    from ampopt.train import tune
+    from ampopt.tuning import tune
 
     tune(
-        n_trials=n_trials,
+        n_jobs=n_jobs,
+        n_trials_per_job=n_trials_per_job,
         study_name=study_name,
         with_db=with_db,
         data=data,
@@ -94,11 +97,13 @@ def tune(
         sampler=sampler,
         verbose=verbose,
         n_epochs=n_epochs,
+        params=params,
     )
 
 
+
 @app.command()
-def run_tuning_jobs(
+def run_pace_tuning_job(
     study_name: str = typer.Option(..., help="name of the study"),
     data: str = typer.Option(
         "data/oc20_3k_train.lmdb", help="Train dataset"
@@ -113,7 +118,7 @@ def run_tuning_jobs(
     params: str = typer.Option("", help="comma-separated list of key=value HP pairs"),
 ):
     """
-    Run multiple hyperparameter tuning PACE jobs.
+    Run hyperparameter tuning as a PACE job.
 
     If the study name already exists, this command will add extra trials to that DB.
 
@@ -137,18 +142,10 @@ def run_tuning_jobs(
     - Grid uses a grid search (note: the code in study.py must be modified in
     to change the search space for Grid search)
     """
-    from ampopt.jobs import run_tuning_jobs
+    from ampopt.jobs import run_pace_tuning_job
 
-    run_tuning_jobs(
-        n_jobs=n_jobs,
-        data=data,
-        n_trials_per_job=n_trials_per_job,
-        study_name=study_name,
-        pruner=pruner,
-        sampler=sampler,
-        params=params,
-        n_epochs=n_epochs,
-    )
+    run_pace_tuning_job(study_name=study_name, data=data, n_jobs=n_jobs, n_trials_per_job=n_trials_per_job, pruner=pruner, sampler=sampler, params=params, n_epochs=n_epochs)
+
 
 # Utilities
 
