@@ -107,18 +107,20 @@ AmpOpt provides 2 functions for tuning hyperparameters: `tune` and
 As an example:
 
 ```bash
-ampopt run-tuning-jobs --n-jobs=5 --n-trials-per-job=10
+ampopt run-tuning-jobs --study-name=example --n-jobs=5 --n-trials-per-job=10
 ```
 
 or
 
 ```python
 from ampopt import run_tuning_jobs
-run_tuning_jobs(n_jobs=5, n_trials_per_job=10)
+run_tuning_jobs(study_name="example", n_jobs=5, n_trials_per_job=10)
 ```
 
 This will queue 5 PACE jobs, each of which will run 10 trials (i.e. train 10
 models), for a total of 50 trials.
+
+The only required argument is the study name, here "example".
 
 The two functions share many parameters. To read about them, run
 
