@@ -6,11 +6,16 @@ app = typer.Typer()
 
 # Preprocessing
 
+
 @app.command()
 def compute_gmp(
     train: str = typer.Argument(..., help=".traj file to fit & compute features for"),
-    others: Optional[List[str]] = typer.Argument(None, help="other .traj files to compute features for"),
-    data_dir: Optional[str] = typer.Option("data", help="directory to write LMDB files into"),
+    others: Optional[List[str]] = typer.Argument(
+        None, help="other .traj files to compute features for"
+    ),
+    data_dir: Optional[str] = typer.Option(
+        "data", help="directory to write LMDB files into"
+    ),
 ) -> None:
     """
     Precompute GMP features and save to LMDB.
@@ -26,21 +31,23 @@ def compute_gmp(
 
     compute_gmp(train=train, *others, data_dir=data_dir)
 
+
 # Tuning
+
 
 @app.command()
 def tune(
     n_jobs: int = typer.Option(1, help="number of jobs to run in parallel"),
-    n_trials_per_job: int = typer.Option(10, help="number of trials (num of models to train) per job"),
+    n_trials_per_job: int = typer.Option(
+        10, help="number of trials (num of models to train) per job"
+    ),
     study_name: str = typer.Option(
         None, help="name of the study (required if with_db=True)"
     ),
     with_db: bool = typer.Option(
         False, help="store trials on MySQL database, or locally to this job"
     ),
-    data: str = typer.Option(
-        "data/oc20_3k_train.lmdb", help="Train dataset"
-    ),
+    data: str = typer.Option("data/oc20_3k_train.lmdb", help="Train dataset"),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     verbose: bool = typer.Option(
@@ -101,13 +108,10 @@ def tune(
     )
 
 
-
 @app.command()
 def run_pace_tuning_job(
     study_name: str = typer.Option(..., help="name of the study"),
-    data: str = typer.Option(
-        "data/oc20_3k_train.lmdb", help="Train dataset"
-    ),
+    data: str = typer.Option("data/oc20_3k_train.lmdb", help="Train dataset"),
     n_jobs: int = typer.Option(5, help="Number of PACE jobs to run"),
     n_trials_per_job: int = typer.Option(
         10, help="number of trials (num of models to train)"
@@ -144,10 +148,20 @@ def run_pace_tuning_job(
     """
     from ampopt.jobs import run_pace_tuning_job
 
-    run_pace_tuning_job(study_name=study_name, data=data, n_jobs=n_jobs, n_trials_per_job=n_trials_per_job, pruner=pruner, sampler=sampler, params=params, n_epochs=n_epochs)
+    run_pace_tuning_job(
+        study_name=study_name,
+        data=data,
+        n_jobs=n_jobs,
+        n_trials_per_job=n_trials_per_job,
+        pruner=pruner,
+        sampler=sampler,
+        params=params,
+        n_epochs=n_epochs,
+    )
 
 
 # Utilities
+
 
 @app.command()
 def generate_report(study: str):

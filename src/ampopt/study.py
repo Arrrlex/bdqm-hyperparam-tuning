@@ -5,6 +5,7 @@ from dotenv import dotenv_values
 
 from ampopt.utils import ampopt_path
 
+
 @lru_cache
 def connection_string() -> str:
     """Construct DB connection string from .env file."""

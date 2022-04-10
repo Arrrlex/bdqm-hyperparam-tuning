@@ -1,8 +1,8 @@
 import warnings
 from functools import partial
-from uuid import uuid4
-from shutil import rmtree
 from pathlib import Path
+from shutil import rmtree
+from uuid import uuid4
 
 from amptorch.trainer import AtomsTrainer
 from optuna.integration.skorch import SkorchPruningCallback
@@ -13,6 +13,7 @@ from ampopt.utils import num_gpus
 warnings.simplefilter("ignore")
 
 gpus = min(1, num_gpus())
+
 
 def get_param_dict(params, trial, name, low, *args, **kwargs):
     """
@@ -92,6 +93,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
         return score
 
     return objective
+
 
 def clean_up_checkpoints(identifier):
     for path in Path("checkpoints").glob(f"*{identifier}*"):

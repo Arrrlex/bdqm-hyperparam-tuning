@@ -1,4 +1,5 @@
-from ampopt.jobs import ensure_mysql_running, show_running_jobs, run_pace_tuning_job
+from ampopt.jobs import (ensure_mysql_running, run_pace_tuning_job,
+                         show_running_jobs)
 from ampopt.preprocess import compute_gmp
 from ampopt.study import delete_studies, generate_report, view_all_studies
 from ampopt.tuning import tune

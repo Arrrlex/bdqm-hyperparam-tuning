@@ -1,6 +1,6 @@
-from functools import lru_cache
 import os
 import socket
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict
 
@@ -9,6 +9,7 @@ import torch
 
 # Path to root of bdqm-hyperparam-tuning repo
 ampopt_path = Path(__file__).resolve().parents[2]
+
 
 @lru_cache
 def num_gpus():

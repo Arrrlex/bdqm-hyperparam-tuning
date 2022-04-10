@@ -1,10 +1,13 @@
-from joblib import Parallel, delayed
-from ampopt.study import get_or_create_study
-from ampopt.utils import parse_params, is_login_node, read_params_from_env, num_gpus
-from ampopt.train import mk_objective
-
 import os
 from typing import Any, Dict
+
+from joblib import Parallel, delayed
+
+from ampopt.study import get_or_create_study
+from ampopt.train import mk_objective
+from ampopt.utils import (is_login_node, num_gpus, parse_params,
+                          read_params_from_env)
+
 
 def tune(
     n_jobs: int = 1,
@@ -39,7 +42,9 @@ def tune(
         return
 
     if 0 < num_gpus() < n_jobs:
-        print(f"Warning: running {n_jobs} jobs with only {num_gpus()} GPUs, trouble ahead")
+        print(
+            f"Warning: running {n_jobs} jobs with only {num_gpus()} GPUs, trouble ahead"
+        )
 
     local = "on DB" if with_db else "locally"
     print(f"Running hyperparam tuning {local} with:")
@@ -76,7 +81,8 @@ def tune(
             n_trials=n_trials_per_job,
             params_dict=params_dict,
             gpu_device=0,
-            verbose=verbose)
+            verbose=verbose,
+        )
     else:
         Parallel(n_jobs=n_jobs)(
             delayed(tune_local)(
@@ -89,16 +95,29 @@ def tune(
                 n_trials=n_trials_per_job,
                 params_dict=params_dict,
                 gpu_device=i,
-                verbose=verbose)
+                verbose=verbose,
+            )
             for i in range(n_jobs)
         )
 
 
-
-def tune_local(study_name: str, with_db: bool, pruner: str, sampler: str, n_epochs: int, data: str, n_trials: int, params_dict: Dict[str, Any], gpu_device: int, verbose: bool):
+def tune_local(
+    study_name: str,
+    with_db: bool,
+    pruner: str,
+    sampler: str,
+    n_epochs: int,
+    data: str,
+    n_trials: int,
+    params_dict: Dict[str, Any],
+    gpu_device: int,
+    verbose: bool,
+):
     os.environ["GPU_VISIBLE_DEVICES"] = str(gpu_device)
     study = get_or_create_study(
         study_name=study_name, with_db=with_db, pruner=pruner, sampler=sampler
     )
-    objective = mk_objective(verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict)
+    objective = mk_objective(
+        verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict
+    )
     study.optimize(objective, n_trials=n_trials)

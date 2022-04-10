@@ -5,9 +5,9 @@ Functions and classes for preprocessing data.
 import json
 import pickle
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
-from functools import lru_cache
 
 import lmdb
 import torch
@@ -20,6 +20,7 @@ from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
 from ampopt.utils import ampopt_path
+
 
 def compute_gmp(
     train: str,
@@ -95,6 +96,7 @@ def mk_feature_pipeline(train_imgs: Sequence) -> Pipeline:
 
     return featurizer_pipeline.fit(train_imgs)
 
+
 class ScalerTransformer:
     """Scikit-learn compatible wrapper for FeatureScaler and TargetScaler."""
 
@@ -156,6 +158,7 @@ def electron_densities() -> Dict[str, Path]:
     gaussians_path = ampopt_path / "data/GMP/valence_gaussians"
     regex = r"(.+?)_"
     return {re.match(regex, p.name).group(1): p for p in gaussians_path.iterdir()}
+
 
 @lru_cache
 def sigmas_dict() -> Dict[int, List[int]]:

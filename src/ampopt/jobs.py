@@ -10,6 +10,7 @@ import pandas as pd
 
 from ampopt.utils import ampopt_path, parse_params
 
+
 def run_pace_tuning_job(
     study_name: str,
     data="data/oc20_3k_train.lmdb",
@@ -23,7 +24,6 @@ def run_pace_tuning_job(
     ensure_mysql_running()
     params_dict = parse_params(params, prefix="param_")
 
-
     queue_job(
         "tune-amptorch-hyperparams",
         template_args={"n_jobs": n_jobs},
@@ -35,6 +35,7 @@ def run_pace_tuning_job(
         n_epochs=n_epochs,
         **params_dict,
     )
+
 
 # def run_tuning_jobs(
 #     study_name: str,
@@ -67,6 +68,7 @@ def run_pace_tuning_job(
 #             **params_dict,
 #         )
 
+
 def to_path(job_name: str) -> Path:
     """Convert a job name to a filepath."""
     return ampopt_path / f"jobs/{job_name}.pbs"
@@ -98,12 +100,14 @@ def queue_job(job_name, template_args=None, **extra_args):
         cmd += f' -v "{extras}"'
     subprocess.run(cmd, shell=True)
 
+
 def apply_template_args(path, template_args):
     pbs_script = path.read_text().format(**template_args)
-    stem = path.stem + "_".join(f"{k}_{v}" for k,v in sorted(template_args.items()))
+    stem = path.stem + "_".join(f"{k}_{v}" for k, v in sorted(template_args.items()))
     new_path = pbs_script.parent / f"{stem}.pbs"
     new_path.write_text(pbs_script)
     return new_path
+
 
 def qstat():
     """

@@ -74,6 +74,13 @@ those parameters in the `params` option as follows:
 ampopt tune --n-trials-per-job=2 --params="dropout_rate=0.5,lr=1e-2"
 ```
 
+or
+
+```python
+from ampopt import tune
+tune(n_trials_per_job=2, params="dropout_rate=0.5,lr=1e-2")
+```
+
 The full list of parameters that can be set this way can be found by reading
 the source code for `train.py`.
 
