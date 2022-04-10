@@ -11,14 +11,14 @@ AmpOpt provides a convenience function `compute_gmp` for using the GMP
 fingerprinting scheme. It can be used as follows:
 
 ```bash
-ampopt compute-gmp oc20_3k_train.traj test.traj
+ampopt compute-gmp data/oc20_3k_train.traj data/oc20_300_test.traj
 ```
 
 or
 
 ```python
 from ampopt import compute_gmp
-compute_gmp("oc20_3k_train.traj", "test.traj")
+compute_gmp("data/oc20_3k_train.traj", "data/oc20_300_test.traj")
 ```
 
 `compute_gmp` can accept arbitrarily many filenames as arguments, and as few as
@@ -26,6 +26,20 @@ one. Only the first filename will be used to fit the feature & target scalers.
 
 `compute_gmp` chooses the output filenames by stripping the suffix (`.traj`)
 and replacing it with `.lmdb`.
+
+By default, `compute_gmp` writes to the `data` directory. To write to a
+different directory:
+
+```bash
+ampopt compute-gmp data/oc20_3k_train.traj --data-dir=some/other/dir
+```
+
+or
+
+```python
+from ampopt import compute_gmp
+compute_gmp("data/oc20_3k_train.traj", data_dir="some/other/dir")
+```
 
 
 ## Tuning Hyperparameters

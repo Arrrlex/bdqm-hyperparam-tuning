@@ -9,12 +9,13 @@ app = typer.Typer()
 @app.command()
 def compute_gmp(
     train: str = typer.Argument(..., help=".traj file to fit & compute features for"),
-    others: Optional[List[str]] = typer.Argument(None, help="other .traj files to compute features for")
+    others: Optional[List[str]] = typer.Argument(None, help="other .traj files to compute features for"),
+    data_dir: Optional[str] = typer.Option("data", help="directory to write LMDB files into"),
 ) -> None:
     """
     Precompute GMP features and save to LMDB.
 
-    The LMDB files are written to the data directory.
+    The LMDB files are written to the `data_dir` directory.
 
     Note: only the first argument TRAIN is used to fit the feature pipeline.
     """
@@ -23,7 +24,7 @@ def compute_gmp(
 
     from ampopt.preprocess import compute_gmp
 
-    compute_gmp(train=train, *others)
+    compute_gmp(train=train, *others, data_dir=data_dir)
 
 # Tuning
 
@@ -37,7 +38,7 @@ def tune(
         False, help="store trials on MySQL database, or locally to this job"
     ),
     data: str = typer.Option(
-        "oc20_3k_train.lmdb", help="Train dataset in data/ folder to use"
+        "data/oc20_3k_train.lmdb", help="Train dataset"
     ),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
@@ -88,6 +89,7 @@ def tune(
         n_trials=n_trials,
         study_name=study_name,
         with_db=with_db,
+        data=data,
         pruner=pruner,
         sampler=sampler,
         verbose=verbose,
@@ -98,6 +100,9 @@ def tune(
 @app.command()
 def run_tuning_jobs(
     study_name: str = typer.Option(..., help="name of the study"),
+    data: str = typer.Option(
+        "data/oc20_3k_train.lmdb", help="Train dataset"
+    ),
     n_jobs: int = typer.Option(5, help="Number of PACE jobs to run"),
     n_trials_per_job: int = typer.Option(
         10, help="number of trials (num of models to train)"
@@ -136,6 +141,7 @@ def run_tuning_jobs(
 
     run_tuning_jobs(
         n_jobs=n_jobs,
+        data=data,
         n_trials_per_job=n_trials_per_job,
         study_name=study_name,
         pruner=pruner,

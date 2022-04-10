@@ -15,16 +15,13 @@ from ampopt.utils import (ampopt_path, gpus, is_login_node,
 
 data_path = ampopt_path / "data"
 
-# valid_imgs = Trajectory(data_path / "valid.traj")
-# y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
-
 warnings.simplefilter("ignore")
 
 def tune(
     n_trials: int = 10,
     study_name: str = None,
     with_db: bool = False,
-    data: str = "oc20_3k_train.lmdb",
+    data: str = "data/oc20_3k_train.lmdb",
     pruner: str = "Median",
     sampler: str = "CmaEs",
     verbose: bool = False,
@@ -44,6 +41,7 @@ def tune(
     local = "on DB" if with_db else "locally"
     print(f"Running hyperparam tuning {local} with:")
     print(f" - study_name: {study_name}")
+    print(f" - dataset: {data}")
     print(f" - n_trials: {n_trials}")
     print(f" - sampler: {sampler}")
     print(f" - pruner: {pruner}")
@@ -114,7 +112,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
                 "epochs": epochs,
             },
             "dataset": {
-                "lmdb_path": [str(data_path / train_fname)],
+                "lmdb_path": [train_fname],
                 "cache": "full",
                 "val_split": 0.1,
             },

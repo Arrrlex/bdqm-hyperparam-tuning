@@ -12,6 +12,7 @@ from ampopt.utils import ampopt_path, parse_params
 
 def run_tuning_jobs(
     study_name: str,
+    data="data/oc20_3k_train.lmdb",
     n_jobs: int = 5,
     n_trials_per_job: int = 10,
     pruner: str = "Median",
@@ -32,6 +33,7 @@ def run_tuning_jobs(
         queue_job(
             "tune-amptorch-hyperparams",
             n_trials=n_trials_per_job,
+            data=data,
             study_name=study_name,
             pruner=pruner,
             sampler=sampler,
