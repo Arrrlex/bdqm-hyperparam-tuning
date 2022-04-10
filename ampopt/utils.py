@@ -9,7 +9,7 @@ import torch
 rng = np.random.default_rng()
 
 # Path to root of bdqm-hyperparam-tuning repo
-bdqm_hpopt_path = Path(__file__).resolve().parents[1]
+ampopt_path = Path(__file__).resolve().parents[1]
 gpus = min(1, torch.cuda.device_count())
 
 

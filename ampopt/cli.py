@@ -57,7 +57,7 @@ def tune(
     - Grid uses a grid search (note: the code in study.py must be modified in
     to change the search space for Grid search)
     """
-    from hpopt.train import tune
+    from ampopt.train import tune
 
     tune(
         n_trials=n_trials,
@@ -79,7 +79,7 @@ def create_lmdbs(
 
     Writes to train.lmdb, valid.lmdb and test.lmdb in the data directory.
     """
-    from hpopt.preprocess import create_lmdbs
+    from ampopt.preprocess import create_lmdbs
 
     create_lmdbs(train_fname=train, valid_fname=valid, test_fname=test)
 
@@ -98,7 +98,7 @@ def create_validation_split(
     ),
 ) -> None:
     """Split the dataset into train & valid sets."""
-    from hpopt.preprocess import create_validation_split
+    from ampopt.preprocess import create_validation_split
 
     create_validation_split(
         train_fname=train,
@@ -113,7 +113,7 @@ def delete_studies(study_names: List[str]):
     """
     Delete studies from the MySQL DB.
     """
-    from hpopt.study import delete_studies
+    from ampopt.study import delete_studies
 
     delete_studies(*study_names)
 
@@ -125,7 +125,7 @@ def generate_report(study: str):
 
     The report will be saved to the folder `report/{study}`.
     """
-    from hpopt.study import generate_report
+    from ampopt.study import generate_report
 
     generate_report(study)
 
@@ -135,7 +135,7 @@ def view_all_studies():
     """
     View basic information about all studies in the DB.
     """
-    from hpopt.study import view_all_studies
+    from ampopt.study import view_all_studies
 
     view_all_studies()
 
@@ -177,7 +177,7 @@ def run_tuning_jobs(
     - Grid uses a grid search (note: the code in study.py must be modified in
     to change the search space for Grid search)
     """
-    from hpopt.jobs import run_tuning_jobs
+    from ampopt.jobs import run_tuning_jobs
 
     run_tuning_jobs(
         n_jobs=n_jobs,
@@ -195,7 +195,7 @@ def ensure_mysql_running():
     """
     If MySQL job is not running, start it.
     """
-    from hpopt.jobs import ensure_mysql_running
+    from ampopt.jobs import ensure_mysql_running
 
     ensure_mysql_running()
 
@@ -205,6 +205,6 @@ def show_running_jobs(name: str = None):
     """
     View list of all running jobs for the current user.
     """
-    from hpopt.jobs import show_running_jobs
+    from ampopt.jobs import show_running_jobs
 
     show_running_jobs(name)

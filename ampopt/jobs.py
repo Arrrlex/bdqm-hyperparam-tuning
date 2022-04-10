@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from hpopt.utils import bdqm_hpopt_path, parse_params
+from ampopt.utils import ampopt_path, parse_params
 
 
 def to_path(job_name: str) -> Path:
     """Convert a job name to a filepath."""
-    return bdqm_hpopt_path / f"jobs/{job_name}.pbs"
+    return ampopt_path / f"jobs/{job_name}.pbs"
 
 
 def check_job_valid(job_name: str):
@@ -134,10 +134,10 @@ def update_dotenv_file(node):
     """
     Update .env with information about the running MySQL job.
     """
-    with open(bdqm_hpopt_path / ".env") as f:
+    with open(ampopt_path / ".env") as f:
         lines = f.readlines()
 
-    with open(bdqm_hpopt_path / ".env", "w") as f:
+    with open(ampopt_path / ".env", "w") as f:
         for line in lines:
             if not line.startswith("MYSQL_NODE"):
                 f.write(line)

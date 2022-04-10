@@ -18,17 +18,17 @@ from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
-from hpopt.utils import bdqm_hpopt_path, split_data
+from ampopt.utils import ampopt_path, split_data
 
 
 def get_electron_densities() -> Dict[str, Path]:
-    gaussians_path = bdqm_hpopt_path / "data/GMP/valence_gaussians"
+    gaussians_path = ampopt_path / "data/GMP/valence_gaussians"
     regex = r"(.+?)_"
     return {re.match(regex, p.name).group(1): p for p in gaussians_path.iterdir()}
 
 
 def get_sigmas() -> Dict[int, List[int]]:
-    with open(bdqm_hpopt_path / "data/GMP/sigmas.json") as f:
+    with open(ampopt_path / "data/GMP/sigmas.json") as f:
         d = json.load(f)
     return {int(k): v for k, v in d.items()}
 
@@ -185,7 +185,7 @@ def create_lmdbs(train_fname: str, valid_fname: str, test_fname: str) -> None:
     """Calculate features and save to lmdb."""
     print(f"Creating lmdbs from files {train_fname}, {valid_fname}, {test_fname}")
 
-    data_dir = bdqm_hpopt_path / "data"
+    data_dir = ampopt_path / "data"
     train_lmdb_path = data_dir / "train.lmdb"
     test_lmdb_path = data_dir / "test.lmdb"
     valid_lmdb_path = data_dir / "valid.lmdb"
@@ -230,7 +230,7 @@ def create_validation_split(
     print(f"Splitting {train_fname}:")
     print(f"  {(1-valid_split)*100:.1f}% into {train_out_fname}")
     print(f"  {valid_split*100:.1f}% into {valid_out_fname}")
-    data_dir = bdqm_hpopt_path / "data"
+    data_dir = ampopt_path / "data"
 
     valid_traj_path = data_dir / valid_out_fname
     train_traj_path = data_dir / train_out_fname

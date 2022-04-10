@@ -1,10 +1,10 @@
 import setuptools
 
 setuptools.setup(
-    name="bdqm-hyperparam-tuning",
+    name="AmpOpt",
     version="dev",
-    packages=["hpopt"],
+    packages=["ampopt"],
     entry_points={
-        "console_scripts": ["hpopt=hpopt.cli:app"],
+        "console_scripts": ["ampopt=ampopt.cli:app", "hpopt=ampopt.cli:app"],
     },
 )

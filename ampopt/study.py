@@ -1,13 +1,13 @@
 import optuna
 from dotenv import dotenv_values
 
-from hpopt.jobs import ensure_mysql_running
-from hpopt.utils import bdqm_hpopt_path
+from ampopt.jobs import ensure_mysql_running
+from ampopt.utils import ampopt_path
 
 
 def _construct_connection_string() -> str:
     """Construct DB connection string from .env file."""
-    config = dotenv_values(bdqm_hpopt_path / ".env")
+    config = dotenv_values(ampopt_path / ".env")
     username = config["MYSQL_USERNAME"]
     password = config["MYSQL_PASSWORD"]
     node = config["MYSQL_NODE"]
@@ -81,7 +81,7 @@ def view_all_studies():
 
 def generate_report(study_name: str):
     ensure_mysql_running()
-    report_dir = bdqm_hpopt_path / "report" / study_name
+    report_dir = ampopt_path / "report" / study_name
     try:
         report_dir.mkdir(parents=True)
     except FileExistsError:

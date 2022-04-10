@@ -9,12 +9,12 @@ from optuna.integration.skorch import SkorchPruningCallback
 from sklearn.metrics import mean_absolute_error
 from torch import nn
 
-from hpopt.study import get_or_create_study
-from hpopt.train import mk_objective
-from hpopt.utils import (bdqm_hpopt_path, gpus, is_login_node,
+from ampopt.study import get_or_create_study
+from ampopt.train import mk_objective
+from ampopt.utils import (ampopt_path, gpus, is_login_node,
                          read_params_from_env)
 
-data_path = bdqm_hpopt_path / "data"
+data_path = ampopt_path / "data"
 
 valid_imgs = Trajectory(data_path / "valid.traj")
 y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
