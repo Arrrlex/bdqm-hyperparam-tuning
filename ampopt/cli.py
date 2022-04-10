@@ -7,30 +7,6 @@ app = typer.Typer()
 # Preprocessing
 
 @app.command()
-def create_valid_split(
-    train: str = typer.Option("oc20_3k_train.traj", help="the input dataset"),
-    valid_split: float = typer.Option(
-        0.1, help="proportion of dataset to split off for validation"
-    ),
-    train_out_fname: str = typer.Option(
-        "train.traj", help="filename to write output train dataset to"
-    ),
-    valid_out_fname: str = typer.Option(
-        "valid.traj", help="filename to write output valid dataset to"
-    ),
-) -> None:
-    """Split the dataset into train & valid sets."""
-    from ampopt.preprocess import create_valid_split
-
-    create_valid_split(
-        train=train,
-        valid_split=valid_split,
-        train_out_fname=train_out_fname,
-        valid_out_fname=valid_out_fname,
-    )
-
-
-@app.command()
 def compute_gmp(
     train: str = typer.Argument(..., help=".traj file to fit & compute features for"),
     others: Optional[List[str]] = typer.Argument(None, help="other .traj files to compute features for")

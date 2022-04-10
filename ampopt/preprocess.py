@@ -19,36 +19,7 @@ from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
-from ampopt.utils import ampopt_path, split_data
-
-def create_valid_split(
-    train: str = "oc20_3k_train.traj",
-    valid_split: int = 0.1,
-    train_out_fname: str = "train.traj",
-    valid_out_fname: str = "valid.traj",
-) -> None:
-    """Split train into train & valid, save to .traj files."""
-    print(f"Splitting {train}:")
-    print(f"  {(1-valid_split)*100:.1f}% into {train_out_fname}")
-    print(f"  {valid_split*100:.1f}% into {valid_out_fname}")
-    data_dir = ampopt_path / "data"
-
-    valid_traj_path = data_dir / valid_out_fname
-    train_traj_path = data_dir / train_out_fname
-
-    for path in [train_traj_path, valid_traj_path]:
-        if path.exists():
-            print(f"{path} already exists, aborting")
-            return
-
-    print("Loading and splitting data...")
-    train_imgs = Trajectory(data_dir / train)
-    train_imgs, valid_imgs = split_data(train_imgs, valid_pct=valid_split)
-
-    print("\nSaving data...")
-    save_to_traj(train_imgs, train_traj_path)
-    save_to_traj(valid_imgs, valid_traj_path)
-
+from ampopt.utils import ampopt_path
 
 def compute_gmp(
     train: str,
