@@ -10,7 +10,6 @@ from sklearn.metrics import mean_absolute_error
 from torch import nn
 
 from ampopt.study import get_or_create_study
-from ampopt.train import mk_objective
 from ampopt.utils import (ampopt_path, gpus, is_login_node,
                          read_params_from_env)
 
