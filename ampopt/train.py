@@ -15,8 +15,8 @@ from ampopt.utils import (ampopt_path, gpus, is_login_node,
 
 data_path = ampopt_path / "data"
 
-valid_imgs = Trajectory(data_path / "valid.traj")
-y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
+# valid_imgs = Trajectory(data_path / "valid.traj")
+# y_valid = np.array([img.get_potential_energy() for img in valid_imgs])
 
 warnings.simplefilter("ignore")
 
@@ -78,7 +78,7 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
     return {name: val}
 
 
-def mk_objective(verbose, epochs, **params):
+def mk_objective(verbose, epochs, train_fname="train.lmdb", **params):
     def objective(trial):
         get = partial(get_param_dict, params, trial)
         config = {
@@ -108,9 +108,9 @@ def mk_objective(verbose, epochs, **params):
                 "epochs": epochs,
             },
             "dataset": {
-                "lmdb_path": [str(data_path / "train.lmdb")],
+                "lmdb_path": [str(data_path / train_fname)],
                 "cache": "full",
-                # "val_split": 0.1,
+                "val_split": 0.1,
             },
             "cmd": {
                 # "debug": True, # prevents logging to checkpoints
@@ -125,6 +125,6 @@ def mk_objective(verbose, epochs, **params):
         trainer = AtomsTrainer(config)
         trainer.train()
 
-        return mean_absolute_error(trainer.predict(valid_imgs)["energy"], y_valid)
+        return trainer.net.history[-1, "val_energy_mae"]
 
     return objective
