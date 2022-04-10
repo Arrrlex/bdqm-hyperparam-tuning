@@ -32,22 +32,23 @@ def compute_gmp(
 
     data_dir = Path(data_dir)
     data_dir.mkdir(exist_ok=True)
-    lmdb_paths = [data_dir / Path(fname).with_suffix(".lmdb") for fname in fnames]
+    lmdb_paths = [data_dir / f"{Path(fname).stem}.lmdb" for fname in fnames]
 
     for path in lmdb_paths:
         if path.exists():
             print(f"{path} already exists, aborting")
             return
 
+    trajs = [Trajectory(fname) for fname in fnames]
+
     torch.set_default_tensor_type(torch.DoubleTensor)
 
     print(f"Fitting to {train}...")
-    featurizer = mk_feature_pipeline(Trajectory(data_dir / train))
+    featurizer = mk_feature_pipeline(trajs[0])
 
-    for fname, lmdb_fname in zip(fnames, lmdb_paths):
+    for fname, traj, lmdb_fname in zip(fnames, trajs, lmdb_paths):
         print(f"\nLooking at {fname}:")
-        imgs = Trajectory(data_dir / fname)
-        feats = featurizer.transform(imgs)
+        feats = featurizer.transform(traj)
         save_to_lmdb(feats, featurizer, lmdb_fname)
 
 

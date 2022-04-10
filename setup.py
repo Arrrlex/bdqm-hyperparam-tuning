@@ -1,10 +1,11 @@
-import setuptools
+from setuptools import setup, find_packages
 
-setuptools.setup(
+setup(
     name="AmpOpt",
-    version="dev",
-    packages=["ampopt"],
+    version="0.0.1",
+    packages=["ampopt", "ampopt_cli"],
+    package_dir={"": "src"},
     entry_points={
-        "console_scripts": ["ampopt=ampopt.cli:app", "hpopt=ampopt.cli:app"],
+        "console_scripts": ["ampopt=ampopt_cli.cli:app", "hpopt=ampopt_cli.cli:app"],
     },
 )

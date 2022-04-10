@@ -1,19 +1,16 @@
 import warnings
 from functools import partial
 from uuid import uuid4
+from shutil import rmtree
+from pathlib import Path
 
-import numpy as np
 from amptorch.trainer import AtomsTrainer
-from ase.io import Trajectory
 from optuna.integration.skorch import SkorchPruningCallback
-from sklearn.metrics import mean_absolute_error
 from torch import nn
 
 from ampopt.study import get_or_create_study
-from ampopt.utils import (ampopt_path, gpus, is_login_node,
-                         read_params_from_env)
+from ampopt.utils import gpus, is_login_node, read_params_from_env
 
-data_path = ampopt_path / "data"
 
 warnings.simplefilter("ignore")
 
@@ -85,6 +82,7 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
 def mk_objective(verbose, epochs, train_fname, **params):
     def objective(trial):
         get = partial(get_param_dict, params, trial)
+        identifier = str(uuid4())
         config = {
             "model": {
                 **get("num_layers", 3, 8),
@@ -119,7 +117,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
             "cmd": {
                 # "debug": True, # prevents logging to checkpoints
                 "seed": 12,
-                "identifier": str(uuid4()),
+                "identifier": identifier,
                 "dtype": "torch.DoubleTensor",
                 "verbose": verbose,
                 "custom_callback": SkorchPruningCallback(trial, "train_energy_mae"),
@@ -129,6 +127,14 @@ def mk_objective(verbose, epochs, train_fname, **params):
         trainer = AtomsTrainer(config)
         trainer.train()
 
-        return trainer.net.history[-1, "val_energy_mae"]
+        score = trainer.net.history[-1, "val_energy_mae"]
+
+        clean_up_checkpoints(identifier)
+
+        return score
 
     return objective
+
+def clean_up_checkpoints(identifier):
+    for path in Path("checkpoints").glob(f"*{identifier}*"):
+        rmtree(path)
