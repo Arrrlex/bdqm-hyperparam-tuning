@@ -51,10 +51,13 @@ def _cast(s):
     except ValueError:
         return s
 
+def remove_prefix(s, prefix):
+    if s.startswith(prefix):
+        return s[len(prefix):]
+    return s
 
 def read_params_from_env() -> Dict[str, Any]:
     params = {}
-    print(os.environ)
     for k, v in os.environ.items():
         if k.startswith("param_"):
             k = k[len("param_") :]

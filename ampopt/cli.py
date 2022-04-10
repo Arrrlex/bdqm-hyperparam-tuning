@@ -60,6 +60,9 @@ def tune(
     with_db: bool = typer.Option(
         False, help="store trials on MySQL database, or locally to this job"
     ),
+    data: str = typer.Option(
+        "oc20_3k_train.lmdb", help="Train dataset in data/ folder to use"
+    ),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     verbose: bool = typer.Option(

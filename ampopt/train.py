@@ -24,6 +24,7 @@ def tune(
     n_trials: int = 10,
     study_name: str = None,
     with_db: bool = False,
+    data: str = "oc20_3k_train.lmdb",
     pruner: str = "Median",
     sampler: str = "CmaEs",
     verbose: bool = False,
@@ -32,6 +33,11 @@ def tune(
 
     if is_login_node():
         print("Don't run tuning on the login node!")
+        print("Aborting")
+        return
+
+    if with_db and study_name is None:
+        print("If running on DB, study_name must be provided")
         print("Aborting")
         return
 
@@ -52,7 +58,7 @@ def tune(
     study = get_or_create_study(
         study_name=study_name, with_db=with_db, pruner=pruner, sampler=sampler
     )
-    objective = mk_objective(verbose=verbose, epochs=n_epochs, **params_dict)
+    objective = mk_objective(verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict)
     study.optimize(objective, n_trials=n_trials)
 
 def get_param_dict(params, trial, name, low, *args, **kwargs):
@@ -78,7 +84,7 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
     return {name: val}
 
 
-def mk_objective(verbose, epochs, train_fname="train.lmdb", **params):
+def mk_objective(verbose, epochs, train_fname, **params):
     def objective(trial):
         get = partial(get_param_dict, params, trial)
         config = {
