@@ -9,7 +9,10 @@ from optuna.integration.skorch import SkorchPruningCallback
 from sklearn.metrics import mean_absolute_error
 from torch import nn
 
-from hpopt.utils import bdqm_hpopt_path, gpus
+from hpopt.study import get_or_create_study
+from hpopt.train import mk_objective
+from hpopt.utils import (bdqm_hpopt_path, gpus, is_login_node,
+                         read_params_from_env)
 
 data_path = bdqm_hpopt_path / "data"
 
@@ -92,3 +95,39 @@ def mk_objective(verbose, epochs, **params):
         return mean_absolute_error(trainer.predict(valid_imgs)["energy"], y_valid)
 
     return objective
+
+
+def tune(
+    n_trials: int,
+    study_name: str,
+    with_db: bool,
+    pruner: str,
+    sampler: str,
+    verbose: bool,
+    n_epochs: int,
+):
+
+    if is_login_node():
+        print("Don't run tuning on the login node!")
+        print("Aborting")
+        return
+
+    local = "on DB" if with_db else "locally"
+    print(f"Running hyperparam tuning {local} with:")
+    print(f" - study_name: {study_name}")
+    print(f" - n_trials: {n_trials}")
+    print(f" - sampler: {sampler}")
+    print(f" - pruner: {pruner}")
+    print(f" - num epochs: {n_epochs}")
+
+    params_dict = read_params_from_env()
+    if params_dict:
+        print(f" - params:")
+        for k, v in params_dict.items():
+            print(f"   - {k}: {v}")
+
+    study = get_or_create_study(
+        study_name=study_name, with_db=with_db, pruner=pruner, sampler=sampler
+    )
+    objective = mk_objective(verbose=verbose, epochs=n_epochs, **params_dict)
+    study.optimize(objective, n_trials=n_trials)

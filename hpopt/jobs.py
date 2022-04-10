@@ -74,8 +74,8 @@ def qstat():
 
 def get_running_jobs(job_name: str = None):
     """
-    Return pandas DataFrame consisting of current user's running jobs whose name is
-    `job_name`.
+    Return pandas DataFrame consisting of current user's running or queued jobs whose
+    name is `job_name`.
 
     If `job_name` is None, return all running jobs for current user.
     """
@@ -83,6 +83,23 @@ def get_running_jobs(job_name: str = None):
     if job_name is not None:
         jobs = jobs[jobs.name == job_name]
     return jobs
+
+
+def show_running_jobs(job_name: str = None):
+    """
+    Print current user's running jobs whose name is `job_name`.
+
+    If `job_name` is None, print all running jobs for current user.
+    """
+
+    running_jobs = get_running_jobs(job_name=job_name)
+    if len(running_jobs) == 0:
+        if job_name is None:
+            print("No running jobs.")
+        else:
+            print(f"No running jobs with name {job_name}.")
+    else:
+        print(running_jobs.to_string(index=False))
 
 
 def get_or_start(job_name, just_queued=False):

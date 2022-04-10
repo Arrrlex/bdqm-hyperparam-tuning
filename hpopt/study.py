@@ -1,6 +1,7 @@
 import optuna
 from dotenv import dotenv_values
 
+from hpopt.jobs import ensure_mysql_running
 from hpopt.utils import bdqm_hpopt_path
 
 
@@ -18,7 +19,14 @@ CONN_STRING = _construct_connection_string()
 
 
 def delete_study(study_name: str):
+    ensure_mysql_running()
     optuna.delete_study(study_name=study_name, storage=CONN_STRING)
+    print(f"Deleted study {study_name}.")
+
+
+def delete_studies(*study_names: str):
+    for study_name in study_names:
+        delete_study(study_name)
 
 
 def get_study(study_name: str):
@@ -58,7 +66,21 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
     return optuna.create_study(**params)
 
 
+def view_all_studies():
+    ensure_mysql_running()
+
+    studies = get_all_studies()
+    for study in studies:
+        print(f"Study {study.study_name}:")
+        print(f"  Params:")
+        for param in study.best_trial.params:
+            print(f"    - {param}")
+        print(f"  Best score: {study.best_trial.value}")
+        print(f"  Num trials: {study.n_trials}")
+
+
 def generate_report(study_name: str):
+    ensure_mysql_running()
     report_dir = bdqm_hpopt_path / "report" / study_name
     try:
         report_dir.mkdir(parents=True)

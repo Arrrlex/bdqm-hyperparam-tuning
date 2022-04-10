@@ -183,6 +183,8 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
 
 def create_lmdbs(train_fname: str, valid_fname: str, test_fname: str) -> None:
     """Calculate features and save to lmdb."""
+    print(f"Creating lmdbs from files {train_fname}, {valid_fname}, {test_fname}")
+
     data_dir = bdqm_hpopt_path / "data"
     train_lmdb_path = data_dir / "train.lmdb"
     test_lmdb_path = data_dir / "test.lmdb"
@@ -225,6 +227,9 @@ def create_validation_split(
     train_fname: str, valid_split: int, train_out_fname: str, valid_out_fname: str
 ) -> None:
     """Split train into train & valid, save to .traj files."""
+    print(f"Splitting {train_fname}:")
+    print(f"  {(1-valid_split)*100:.1f}% into {train_out_fname}")
+    print(f"  {valid_split*100:.1f}% into {valid_out_fname}")
     data_dir = bdqm_hpopt_path / "data"
 
     valid_traj_path = data_dir / valid_out_fname

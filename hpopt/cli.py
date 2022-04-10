@@ -1,4 +1,4 @@
-from typing import List, Union, Literal
+from typing import List
 
 import typer
 
@@ -57,34 +57,17 @@ def tune(
     - Grid uses a grid search (note: the code in study.py must be modified in
     to change the search space for Grid search)
     """
-    from hpopt.study import get_or_create_study
-    from hpopt.train import mk_objective
-    from hpopt.utils import is_login_node, read_params_from_env
+    from hpopt.train import tune
 
-    if is_login_node():
-        print("Don't run tuning on the login node!")
-        print("Aborting")
-        return
-
-    local = "on DB" if with_db else "locally"
-    print(f"Running hyperparam tuning {local} with:")
-    print(f" - study_name: {study_name}")
-    print(f" - n_trials: {n_trials}")
-    print(f" - sampler: {sampler}")
-    print(f" - pruner: {pruner}")
-    print(f" - num epochs: {n_epochs}")
-
-    params_dict = read_params_from_env()
-    if params_dict:
-        print(f" - params:")
-        for k, v in params_dict.items():
-            print(f"   - {k}: {v}")
-
-    study = get_or_create_study(
-        study_name=study_name, with_db=with_db, pruner=pruner, sampler=sampler
+    tune(
+        n_trials=n_trials,
+        study_name=study_name,
+        with_db=with_db,
+        pruner=pruner,
+        sampler=sampler,
+        verbose=verbose,
+        n_epochs=n_epochs,
     )
-    objective = mk_objective(verbose=verbose, epochs=n_epochs, **params_dict)
-    study.optimize(objective, n_trials=n_trials)
 
 
 @app.command()
@@ -96,14 +79,13 @@ def create_lmdbs(
 
     Writes to train.lmdb, valid.lmdb and test.lmdb in the data directory.
     """
-    print(f"Creating lmdbs from files {train}, {valid}, {test}")
     from hpopt.preprocess import create_lmdbs
 
     create_lmdbs(train_fname=train, valid_fname=valid, test_fname=test)
 
 
 @app.command()
-def train_valid_split(
+def create_validation_split(
     train: str = typer.Option("oc20_3k_train.traj", help="the input dataset"),
     valid_split: float = typer.Option(
         0.1, help="proportion of dataset to split off for validation"
@@ -116,10 +98,6 @@ def train_valid_split(
     ),
 ) -> None:
     """Split the dataset into train & valid sets."""
-    print(f"Splitting {train}:")
-    print(f"  {(1-valid_split)*100:.1f}% into {train_out_fname}")
-    print(f"  {valid_split*100:.1f}% into {valid_out_fname}")
-
     from hpopt.preprocess import create_validation_split
 
     create_validation_split(
@@ -131,17 +109,13 @@ def train_valid_split(
 
 
 @app.command()
-def delete_study(study_names: List[str]):
+def delete_studies(study_names: List[str]):
     """
-    Delete study from the MySQL DB.
+    Delete studies from the MySQL DB.
     """
-    from hpopt.jobs import ensure_mysql_running
-    from hpopt.study import delete_study
+    from hpopt.study import delete_studies
 
-    ensure_mysql_running()
-    for name in study_names:
-        delete_study(name)
-        print(f"Deleted study {name}.")
+    delete_studies(*study_names)
 
 
 @app.command()
@@ -151,10 +125,8 @@ def generate_report(study: str):
 
     The report will be saved to the folder `report/{study}`.
     """
-    from hpopt.jobs import ensure_mysql_running
     from hpopt.study import generate_report
 
-    ensure_mysql_running()
     generate_report(study)
 
 
@@ -163,19 +135,9 @@ def view_all_studies():
     """
     View basic information about all studies in the DB.
     """
-    from hpopt.jobs import ensure_mysql_running
-    from hpopt.study import get_all_studies
+    from hpopt.study import view_all_studies
 
-    ensure_mysql_running()
-
-    studies = get_all_studies()
-    for study in studies:
-        print(f"Study {study.study_name}:")
-        print(f"  Params:")
-        for param in study.best_trial.params:
-            print(f"    - {param}")
-        print(f"  Best score: {study.best_trial.value}")
-        print(f"  Num trials: {study.n_trials}")
+    view_all_studies()
 
 
 @app.command()
@@ -229,7 +191,7 @@ def run_tuning_jobs(
 
 
 @app.command()
-def run_mysql():
+def ensure_mysql_running():
     """
     If MySQL job is not running, start it.
     """
@@ -239,18 +201,10 @@ def run_mysql():
 
 
 @app.command()
-def view_running_jobs(name: str = None):
+def show_running_jobs(name: str = None):
     """
     View list of all running jobs for the current user.
     """
-    from hpopt.jobs import get_running_jobs
+    from hpopt.jobs import show_running_jobs
 
-    running_jobs = get_running_jobs(job_name=name)
-    if len(running_jobs) == 0:
-        if name is None:
-            print("No running jobs.")
-        else:
-            print(f"No running jobs with name {name}.")
-    else:
-        cols = ["id", "username", "queue", "name", "time", "elapsed", "status", "node"]
-        print(running_jobs[cols].set_index("id"))
+    show_running_jobs(name)
