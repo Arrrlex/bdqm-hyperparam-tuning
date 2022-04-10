@@ -9,23 +9,14 @@ Mechanics" (Andrew Medford).
   jobs, and analyzing results
 - `data` contains the source `.traj` files, as well as the preprocessed `.lmdb`
   files (once `ampopt create-lmdb` has been run).
+- `env_gpu.yml` and `env_cpu.yml` contain dependencies for machines with and
+  without (respectively) GPU.
+- `setup-session.sh` is a convenience script for PACE jobs
+- `setup.py` defines how `ampopt` Python package and command are installed.
 
 ## Installation
 For setup and installation instructions, please refer to [SETUP.md](docs/SETUP.md).
 
 ## Usage
 
-### Running Parallel Hyperparameter Tuning Jobs
-
-1. Activate VPN and SSH into login node
-2. Run `cd ~/bdqm-hyperparam-tuning`
-3. Initialize conda: `source setup-session.sh`
-4. Run `ampopt run-tuning-jobs --n-jobs=5 --n-trials-per-job=10`. Note: before
-  running the tuning jobs, this script will check that MySQL is running and will
-  start a MySQL job if not.
-
-  For more configuration options, run `ampopt run-tuning-jobs --help`.
-
-### Other Tasks
-
-Run `ampopt --help` to see other available commands.
+For usage instructions, please refer to [USAGE.md](docs/USAGE.md).

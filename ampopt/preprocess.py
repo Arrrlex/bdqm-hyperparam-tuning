@@ -7,6 +7,7 @@ import pickle
 import re
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
+from functools import lru_cache
 
 import lmdb
 import torch
@@ -20,21 +21,84 @@ from tqdm.contrib import tenumerate
 
 from ampopt.utils import ampopt_path, split_data
 
+def create_valid_split(
+    train: str = "oc20_3k_train.traj",
+    valid_split: int = 0.1,
+    train_out_fname: str = "train.traj",
+    valid_out_fname: str = "valid.traj",
+) -> None:
+    """Split train into train & valid, save to .traj files."""
+    print(f"Splitting {train}:")
+    print(f"  {(1-valid_split)*100:.1f}% into {train_out_fname}")
+    print(f"  {valid_split*100:.1f}% into {valid_out_fname}")
+    data_dir = ampopt_path / "data"
 
-def get_electron_densities() -> Dict[str, Path]:
+    valid_traj_path = data_dir / valid_out_fname
+    train_traj_path = data_dir / train_out_fname
+
+    for path in [train_traj_path, valid_traj_path]:
+        if path.exists():
+            print(f"{path} already exists, aborting")
+            return
+
+    print("Loading and splitting data...")
+    train_imgs = Trajectory(data_dir / train)
+    train_imgs, valid_imgs = split_data(train_imgs, valid_pct=valid_split)
+
+    print("\nSaving data...")
+    save_to_traj(train_imgs, train_traj_path)
+    save_to_traj(valid_imgs, valid_traj_path)
+
+
+def create_lmdbs(
+    train: str = "train.traj",
+    valid: str = "valid.traj",
+    test: str = "test.traj"
+) -> None:
+    """Calculate features and save to lmdb."""
+    print(f"Creating lmdbs from files {train}, {valid}, {test}")
+
+    data_dir = ampopt_path / "data"
+    train_lmdb_path = data_dir / "train.lmdb"
+    test_lmdb_path = data_dir / "test.lmdb"
+    valid_lmdb_path = data_dir / "valid.lmdb"
+
+    for path in [train_lmdb_path, test_lmdb_path, valid_lmdb_path]:
+        if path.exists():
+            print(f"{path} already exists, aborting")
+            return
+
+    torch.set_default_tensor_type(torch.DoubleTensor)
+    print("Loading data...")
+    train_imgs = Trajectory(data_dir / train)
+    valid_imgs = Trajectory(data_dir / valid)
+    test_imgs = Trajectory(data_dir / test)
+
+    print("\nFitting pipeline & computing train features...")
+    train_feats, featurizer = mk_feature_pipeline(train_imgs)
+    print("Computing valid features...")
+    valid_feats = featurizer.transform(valid_imgs)
+    print("Computing test features...")
+    test_feats = featurizer.transform(test_imgs)
+
+    print("\nSaving train data...")
+    save_to_lmdb(train_feats, featurizer, train_lmdb_path)
+    print("\nSaving test data...")
+    save_to_lmdb(test_feats, featurizer, test_lmdb_path)
+    print("\nSaving valid data...")
+    save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)
+
+@lru_cache
+def electron_densities() -> Dict[str, Path]:
     gaussians_path = ampopt_path / "data/GMP/valence_gaussians"
     regex = r"(.+?)_"
     return {re.match(regex, p.name).group(1): p for p in gaussians_path.iterdir()}
 
-
-def get_sigmas() -> Dict[int, List[int]]:
+@lru_cache
+def sigmas_dict() -> Dict[int, List[int]]:
     with open(ampopt_path / "data/GMP/sigmas.json") as f:
         d = json.load(f)
     return {int(k): v for k, v in d.items()}
-
-
-ELECTRON_DENSITIES = get_electron_densities()
-SIGMAS = get_sigmas()
 
 
 class ScalerTransformer:
@@ -57,7 +121,7 @@ class GMPTransformer:
     """Scikit-learn compatible wrapper for GMP descriptor."""
 
     def __init__(self, n_gaussians, n_mcsh, cutoff, **a2d_kwargs):
-        sigmas = SIGMAS[n_gaussians]
+        sigmas = sigmas_dict()[n_gaussians]
 
         def mcsh_groups(i):
             return [1] if i == 0 else list(range(1, i + 1))
@@ -70,11 +134,11 @@ class GMPTransformer:
                 }
                 for i in range(n_mcsh)
             },
-            "atom_gaussians": ELECTRON_DENSITIES,
+            "atom_gaussians": electron_densities(),
             "cutoff": cutoff,
         }
 
-        self.elements = list(ELECTRON_DENSITIES.keys())
+        self.elements = list(electron_densities().keys())
         self.a2d = AtomsToData(
             descriptor=GMP(MCSHs=MCSHs, elements=self.elements), **a2d_kwargs
         )
@@ -181,69 +245,8 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
     db.close()
 
 
-def create_lmdbs(train_fname: str, valid_fname: str, test_fname: str) -> None:
-    """Calculate features and save to lmdb."""
-    print(f"Creating lmdbs from files {train_fname}, {valid_fname}, {test_fname}")
-
-    data_dir = ampopt_path / "data"
-    train_lmdb_path = data_dir / "train.lmdb"
-    test_lmdb_path = data_dir / "test.lmdb"
-    valid_lmdb_path = data_dir / "valid.lmdb"
-
-    for path in [train_lmdb_path, test_lmdb_path, valid_lmdb_path]:
-        if path.exists():
-            print(f"{path} already exists, aborting")
-            return
-
-    torch.set_default_tensor_type(torch.DoubleTensor)
-    print("Loading data...")
-    train_imgs = Trajectory(data_dir / train_fname)
-    valid_imgs = Trajectory(data_dir / valid_fname)
-    test_imgs = Trajectory(data_dir / test_fname)
-
-    print("\nFitting pipeline & computing train features...")
-    train_feats, featurizer = mk_feature_pipeline(train_imgs)
-    print("Computing valid features...")
-    valid_feats = featurizer.transform(valid_imgs)
-    print("Computing test features...")
-    test_feats = featurizer.transform(test_imgs)
-
-    print("\nSaving train data...")
-    save_to_lmdb(train_feats, featurizer, train_lmdb_path)
-    print("\nSaving test data...")
-    save_to_lmdb(test_feats, featurizer, test_lmdb_path)
-    print("\nSaving valid data...")
-    save_to_lmdb(valid_feats, featurizer, valid_lmdb_path)
-
-
 def save_to_traj(imgs: Iterable[Atoms], path: Path):
     """Save `imgs`."""
     with Trajectory(path, "w") as t:
         for img in tqdm(imgs, desc="Writing data to .traj"):
             t.write(img)
-
-
-def create_validation_split(
-    train_fname: str, valid_split: int, train_out_fname: str, valid_out_fname: str
-) -> None:
-    """Split train into train & valid, save to .traj files."""
-    print(f"Splitting {train_fname}:")
-    print(f"  {(1-valid_split)*100:.1f}% into {train_out_fname}")
-    print(f"  {valid_split*100:.1f}% into {valid_out_fname}")
-    data_dir = ampopt_path / "data"
-
-    valid_traj_path = data_dir / valid_out_fname
-    train_traj_path = data_dir / train_out_fname
-
-    for path in [train_traj_path, valid_traj_path]:
-        if path.exists():
-            print(f"{path} already exists, aborting")
-            return
-
-    print("Loading and splitting data...")
-    train_imgs = Trajectory(data_dir / train_fname)
-    train_imgs, valid_imgs = split_data(train_imgs, valid_pct=valid_split)
-
-    print("\nSaving data...")
-    save_to_traj(train_imgs, train_traj_path)
-    save_to_traj(valid_imgs, valid_traj_path)

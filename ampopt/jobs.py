@@ -10,6 +10,34 @@ import pandas as pd
 
 from ampopt.utils import ampopt_path, parse_params
 
+def run_tuning_jobs(
+    study_name: str,
+    n_jobs: int = 5,
+    n_trials_per_job: int = 10,
+    pruner: str = "Median",
+    sampler: str = "CmaEs",
+    params: str = "",
+    n_epochs: int = 100,
+):
+    """
+    Run multiple hyperparam tuning jobs with the given hyper-hyperparameters.
+    """
+    print(f"Running {n_jobs} tuning jobs with {n_trials_per_job} trials per job")
+    print(f"Study_name: {study_name}, pruner: {pruner}, sampler: {sampler}")
+
+    ensure_mysql_running()
+    params_dict = parse_params(params, prefix="param_")
+
+    for _ in range(n_jobs):
+        queue_job(
+            "tune-amptorch-hyperparams",
+            n_trials=n_trials_per_job,
+            study_name=study_name,
+            pruner=pruner,
+            sampler=sampler,
+            n_epochs=n_epochs,
+            **params_dict,
+        )
 
 def to_path(job_name: str) -> Path:
     """Convert a job name to a filepath."""
@@ -150,33 +178,3 @@ def ensure_mysql_running():
     """
     job = get_or_start("mysql")
     update_dotenv_file(job.node)
-
-
-def run_tuning_jobs(
-    n_jobs: int,
-    n_trials_per_job: int,
-    study_name: str,
-    pruner: str,
-    sampler: str,
-    params: str,
-    n_epochs: int,
-):
-    """
-    Run multiple hyperparam tuning jobs with the given hyper-hyperparameters.
-    """
-    print(f"Running {n_jobs} tuning jobs with {n_trials_per_job} trials per job")
-    print(f"Study_name: {study_name}, pruner: {pruner}, sampler: {sampler}")
-
-    ensure_mysql_running()
-    params_dict = parse_params(params, prefix="param_")
-
-    for _ in range(n_jobs):
-        queue_job(
-            "tune-amptorch-hyperparams",
-            n_trials=n_trials_per_job,
-            study_name=study_name,
-            pruner=pruner,
-            sampler=sampler,
-            n_epochs=n_epochs,
-            **params_dict,
-        )

@@ -4,6 +4,46 @@ import typer
 
 app = typer.Typer()
 
+# Preprocessing
+
+@app.command()
+def create_valid_split(
+    train: str = typer.Option("oc20_3k_train.traj", help="the input dataset"),
+    valid_split: float = typer.Option(
+        0.1, help="proportion of dataset to split off for validation"
+    ),
+    train_out_fname: str = typer.Option(
+        "train.traj", help="filename to write output train dataset to"
+    ),
+    valid_out_fname: str = typer.Option(
+        "valid.traj", help="filename to write output valid dataset to"
+    ),
+) -> None:
+    """Split the dataset into train & valid sets."""
+    from ampopt.preprocess import create_valid_split
+
+    create_valid_split(
+        train=train,
+        valid_split=valid_split,
+        train_out_fname=train_out_fname,
+        valid_out_fname=valid_out_fname,
+    )
+
+
+@app.command()
+def create_lmdbs(
+    train: str = "train.traj", valid: str = "valid.traj", test: str = "test.traj"
+) -> None:
+    """
+    Precompute GMP features and save to LMDB.
+
+    Writes to train.lmdb, valid.lmdb and test.lmdb in the data directory.
+    """
+    from ampopt.preprocess import create_lmdbs
+
+    create_lmdbs(train=train, valid=valid, test=test)
+
+# Tuning
 
 @app.command()
 def tune(
@@ -71,76 +111,6 @@ def tune(
 
 
 @app.command()
-def create_lmdbs(
-    train: str = "train.traj", valid: str = "valid.traj", test: str = "test.traj"
-) -> None:
-    """
-    Precompute GMP features and save to LMDB.
-
-    Writes to train.lmdb, valid.lmdb and test.lmdb in the data directory.
-    """
-    from ampopt.preprocess import create_lmdbs
-
-    create_lmdbs(train_fname=train, valid_fname=valid, test_fname=test)
-
-
-@app.command()
-def create_validation_split(
-    train: str = typer.Option("oc20_3k_train.traj", help="the input dataset"),
-    valid_split: float = typer.Option(
-        0.1, help="proportion of dataset to split off for validation"
-    ),
-    train_out_fname: str = typer.Option(
-        "train.traj", help="filename to write output train dataset to"
-    ),
-    valid_out_fname: str = typer.Option(
-        "valid.traj", help="filename to write output valid dataset to"
-    ),
-) -> None:
-    """Split the dataset into train & valid sets."""
-    from ampopt.preprocess import create_validation_split
-
-    create_validation_split(
-        train_fname=train,
-        valid_split=valid_split,
-        train_out_fname=train_out_fname,
-        valid_out_fname=valid_out_fname,
-    )
-
-
-@app.command()
-def delete_studies(study_names: List[str]):
-    """
-    Delete studies from the MySQL DB.
-    """
-    from ampopt.study import delete_studies
-
-    delete_studies(*study_names)
-
-
-@app.command()
-def generate_report(study: str):
-    """
-    Generate report for given study.
-
-    The report will be saved to the folder `report/{study}`.
-    """
-    from ampopt.study import generate_report
-
-    generate_report(study)
-
-
-@app.command()
-def view_all_studies():
-    """
-    View basic information about all studies in the DB.
-    """
-    from ampopt.study import view_all_studies
-
-    view_all_studies()
-
-
-@app.command()
 def run_tuning_jobs(
     study_name: str = typer.Option(..., help="name of the study"),
     n_jobs: int = typer.Option(5, help="Number of PACE jobs to run"),
@@ -188,6 +158,39 @@ def run_tuning_jobs(
         params=params,
         n_epochs=n_epochs,
     )
+
+# Utilities
+
+@app.command()
+def generate_report(study: str):
+    """
+    Generate report for given study.
+
+    The report will be saved to the folder `report/{study}`.
+    """
+    from ampopt.study import generate_report
+
+    generate_report(study)
+
+
+@app.command()
+def delete_studies(study_names: List[str]):
+    """
+    Delete studies from the MySQL DB.
+    """
+    from ampopt.study import delete_studies
+
+    delete_studies(*study_names)
+
+
+@app.command()
+def view_all_studies():
+    """
+    View basic information about all studies in the DB.
+    """
+    from ampopt.study import view_all_studies
+
+    view_all_studies()
 
 
 @app.command()
