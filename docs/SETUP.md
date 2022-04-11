@@ -144,16 +144,10 @@ Otherwise, skip ahead to the section "Setup on Generic System".
     3. Run this, **replacing 'my-secure-password' with the password you just chose**:
 
         ```
-        mysql -u root << EOF
-        UPDATE mysql.user SET Password=PASSWORD(RAND()) WHERE User='root';
-        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-        DELETE FROM mysql.user WHERE User='';
-        DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
-        GRANT ALL PRIVILEGES ON *.* TO '$USER'@'%' IDENTIFIED BY 'my-secure-password' WITH GRANT OPTION;
-        FLUSH PRIVILEGES;
-        EOF
+        mysqladmin -u root password 'my-secure-password'`
         ```
-    4. Run `mysql -u $USER -p$. When prompted, enter your MySQL password.
+
+    4. Run `mysql -u root -p$. When prompted, enter your MySQL password.
     5. At the MySQL prompt, run `CREATE DATABASE hpopt;`
     6. Exit the MySQL prompt by running `exit`
 
@@ -161,7 +155,7 @@ Otherwise, skip ahead to the section "Setup on Generic System".
    following contents:
 
     ```
-    MYSQL_USERNAME=... # your gatech username
+    MYSQL_USERNAME=root
     MYSQL_PASSWORD=... # the mysql password you set in step 8
     HPOPT_DB=hpopt
     MYSQL_NODE=localhost
