@@ -147,7 +147,7 @@ Otherwise, skip ahead to the section "Setup on Generic System".
         mysqladmin -u root password 'my-secure-password'`
         ```
 
-    4. Run `mysql -u root -p$. When prompted, enter your MySQL password.
+    4. Run `mysql -u root -p`. When prompted, enter your MySQL password.
     5. At the MySQL prompt, run `CREATE DATABASE hpopt;`
     6. Exit the MySQL prompt by running `exit`
 

@@ -9,7 +9,7 @@ Mechanics" (Andrew Medford).
   jobs, and analyzing results
 - `src/ampopt_cli` exposes the functionality of `ampopt` via a CLI
 - `data` contains the source `.traj` files, as well as the preprocessed `.lmdb`
-  files (once `ampopt create-lmdb` has been run).
+  files (once `ampopt compute-gmp` has been run).
 - `env_gpu.yml` and `env_cpu.yml` contain dependencies for machines with and
   without (respectively) GPU.
 - `setup-session.sh` is a convenience script for PACE jobs
