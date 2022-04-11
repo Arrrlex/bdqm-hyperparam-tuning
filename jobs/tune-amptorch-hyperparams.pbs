@@ -15,4 +15,5 @@ ampopt tune --n-trials=$n_trials \
   --pruner=$pruner --sampler=$sampler \
   --n-epochs=$n_epochs \
   --data=$data \
-  --with-db
+  --with-db \
+  --params=env
