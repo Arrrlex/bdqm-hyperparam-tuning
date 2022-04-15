@@ -37,38 +37,6 @@ def run_pace_tuning_job(
     )
 
 
-# def run_tuning_jobs(
-#     study_name: str,
-#     data="data/oc20_3k_train.lmdb",
-#     n_jobs: int = 5,
-#     n_trials_per_job: int = 10,
-#     pruner: str = "Median",
-#     sampler: str = "CmaEs",
-#     params: str = "",
-#     n_epochs: int = 100,
-# ):
-#     """
-#     Run multiple hyperparam tuning jobs with the given hyper-hyperparameters.
-#     """
-#     print(f"Running {n_jobs} tuning jobs with {n_trials_per_job} trials per job")
-#     print(f"Study_name: {study_name}, pruner: {pruner}, sampler: {sampler}")
-
-#     ensure_mysql_running()
-#     params_dict = parse_params(params, prefix="param_")
-
-#     for _ in range(n_jobs):
-#         queue_job(
-#             "tune-amptorch-hyperparams",
-#             n_trials=n_trials_per_job,
-#             data=data,
-#             study_name=study_name,
-#             pruner=pruner,
-#             sampler=sampler,
-#             n_epochs=n_epochs,
-#             **params_dict,
-#         )
-
-
 def to_path(job_name: str) -> Path:
     """Convert a job name to a filepath."""
     return ampopt_path / f"jobs/{job_name}.pbs"
@@ -89,6 +57,7 @@ def queue_job(job_name, template_args=None, **extra_args):
     """
     Schedule a job to be run.
 
+    template_args are used to fill in the job template.
     **extra_args are passed as environment variables to the job script.
     """
     path = to_path(job_name)
@@ -103,8 +72,8 @@ def queue_job(job_name, template_args=None, **extra_args):
 
 def apply_template_args(path, template_args):
     pbs_script = path.read_text().format(**template_args)
-    stem = path.stem + "_".join(f"{k}_{v}" for k, v in sorted(template_args.items()))
-    new_path = pbs_script.parent / f"{stem}.pbs"
+    stem = path.stem + "_" + "_".join(f"{k}_{v}" for k, v in sorted(template_args.items()))
+    new_path = path.parent / f"{stem}.pbs"
     new_path.write_text(pbs_script)
     return new_path
 
