@@ -10,7 +10,9 @@ cat $PBS_NODEFILE
 
 cd ~/bdqm-hyperparam-tuning
 source setup-session.sh
-ampopt tune --n-trials=$n_trials \
+ampopt tune \
+  --n-jobs=$n_jobs \
+  --n-trials-per-job=$n_trials_per_job \
   --study-name=$study_name \
   --pruner=$pruner --sampler=$sampler \
   --n-epochs=$n_epochs \
