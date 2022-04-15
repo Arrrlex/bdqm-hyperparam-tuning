@@ -125,7 +125,7 @@ Run `ampopt --help` to see all available commands.
 You can check a PACE job's progress by running:
 
 ```
-ampopt show-running-jobs
+ampopt view-jobs
 ```
 
 Take a look at the `name` column. You should see:

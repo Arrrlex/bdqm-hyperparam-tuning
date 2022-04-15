@@ -64,7 +64,7 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
     return optuna.create_study(**params)
 
 
-def view_all_studies():
+def view_studies():
     studies = get_all_studies()
     for study in studies:
         print(f"Study {study.study_name}:")

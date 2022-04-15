@@ -186,13 +186,13 @@ def delete_studies(study_names: List[str]):
 
 
 @app.command()
-def view_all_studies():
+def view_studies():
     """
     View basic information about all studies in the DB.
     """
-    from ampopt.study import view_all_studies
+    from ampopt.study import view_studies
 
-    view_all_studies()
+    view_studies()
 
 
 @app.command()
@@ -206,10 +206,10 @@ def ensure_mysql_running():
 
 
 @app.command()
-def show_running_jobs(name: str = None):
+def view_jobs(name: str = None):
     """
     View list of all running jobs for the current user.
     """
-    from ampopt.jobs import show_running_jobs
+    from ampopt.jobs import view_jobs
 
-    show_running_jobs(name)
+    view_jobs(name)

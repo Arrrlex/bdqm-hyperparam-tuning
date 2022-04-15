@@ -123,11 +123,11 @@ def get_running_jobs(job_name: str = None):
     return jobs
 
 
-def show_running_jobs(job_name: str = None):
+def view_jobs(job_name: str = None):
     """
-    Print current user's running jobs whose name is `job_name`.
+    Print current user's running or queued jobs whose name is `job_name`.
 
-    If `job_name` is None, print all running jobs for current user.
+    If `job_name` is None, print all running or queued jobs for current user.
     """
 
     running_jobs = get_running_jobs(job_name=job_name)
