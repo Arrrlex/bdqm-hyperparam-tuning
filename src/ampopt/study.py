@@ -68,10 +68,15 @@ def view_all_studies():
     studies = get_all_studies()
     for study in studies:
         print(f"Study {study.study_name}:")
-        print(f"  Params:")
-        for param in study.best_trial.params:
-            print(f"    - {param}")
-        print(f"  Best score: {study.best_trial.value}")
+        try:
+            trial = study.best_trial
+            assert trial is not None
+            print(f"  Params:")
+            for param in trial.params:
+                print(f"    - {param}")
+            print(f"  Best score: {trial.value}")
+        except AssertionError:
+            print("  (no successful trials yet)")
         print(f"  Num trials: {study.n_trials}")
 
 

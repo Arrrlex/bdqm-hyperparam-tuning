@@ -28,7 +28,7 @@ def run_pace_tuning_job(
         "tune-amptorch-hyperparams",
         template_args={"n_jobs": n_jobs},
         n_jobs=n_jobs,
-        n_trials=n_trials_per_job,
+        n_trials_per_job=n_trials_per_job,
         data=data,
         study_name=study_name,
         pruner=pruner,
@@ -74,7 +74,7 @@ def queue_job(job_name, template_args=None, **extra_args):
 def apply_template_args(path, template_args):
     pbs_script = path.read_text().format(**template_args)
     stem = path.stem + "_" + "_".join(f"{k}_{v}" for k, v in sorted(template_args.items()))
-    new_path = path.parent / f"{stem}.pbs"
+    new_path = path.parent / "filled-templates" / f"{stem}.pbs"
     new_path.write_text(pbs_script)
     return new_path
 

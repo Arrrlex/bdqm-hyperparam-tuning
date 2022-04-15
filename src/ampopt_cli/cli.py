@@ -29,7 +29,7 @@ def compute_gmp(
 
     from ampopt.preprocess import compute_gmp
 
-    compute_gmp(train=train, *others, data_dir=data_dir)
+    compute_gmp(train, *others, data_dir=data_dir)
 
 
 # Tuning

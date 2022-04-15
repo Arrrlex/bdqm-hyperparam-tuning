@@ -1,4 +1,5 @@
 report
+jobs/filled-templates/*.pbs
 
 **/checkpoints/*
 **/processed/*
