@@ -4,7 +4,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict
 
-import numpy as np
 import torch
 
 # Path to root of bdqm-hyperparam-tuning repo

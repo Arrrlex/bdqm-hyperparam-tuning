@@ -65,8 +65,6 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
 
 
 def view_all_studies():
-    ensure_mysql_running()
-
     studies = get_all_studies()
     for study in studies:
         print(f"Study {study.study_name}:")
@@ -78,7 +76,6 @@ def view_all_studies():
 
 
 def generate_report(study_name: str):
-    ensure_mysql_running()
     report_dir = ampopt_path / "report" / study_name
     try:
         report_dir.mkdir(parents=True)

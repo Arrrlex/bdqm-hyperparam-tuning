@@ -17,12 +17,12 @@ dependencies:
   - pytorch-cluster
   - pytorch-spline-conv
   - python-dotenv
+  - pymysql
   - pip:
     - cffi
     - wandb
     - lmdb==1.0.0
     - skorch==0.10.*
     - optuna==2.10.*
-    - pymysql==1.0.*
     - click<8.1.0
     - typer

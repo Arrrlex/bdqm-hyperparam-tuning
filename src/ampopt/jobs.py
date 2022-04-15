@@ -27,6 +27,7 @@ def run_pace_tuning_job(
     queue_job(
         "tune-amptorch-hyperparams",
         template_args={"n_jobs": n_jobs},
+        n_jobs=n_jobs,
         n_trials=n_trials_per_job,
         data=data,
         study_name=study_name,
