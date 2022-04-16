@@ -35,7 +35,7 @@ def get_all_studies():
     return optuna.get_all_study_summaries(storage=connection_string())
 
 
-def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str):
+def get_or_create_study(study_name: str, sampler: str, pruner: str):
     samplers = {
         "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
         "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
@@ -51,17 +51,13 @@ def get_or_create_study(study_name: str, with_db: str, sampler: str, pruner: str
         "None": optuna.pruners.NopPruner(),
     }
 
-    params = {
-        "sampler": samplers[sampler],
-        "pruner": pruners[pruner],
-        "study_name": study_name,
-    }
-
-    if with_db:
-        params["storage"] = connection_string()
-        params["load_if_exists"] = True
-
-    return optuna.create_study(**params)
+    return optuna.create_study(
+        sampler=samplers[sampler],
+        pruner=pruners[pruner],
+        study_name=study_name,
+        connection_string=connection_string(),
+        load_if_exists=True,
+    )
 
 
 def view_studies():

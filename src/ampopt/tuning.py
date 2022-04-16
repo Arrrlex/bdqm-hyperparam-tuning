@@ -13,7 +13,6 @@ def tune(
     n_jobs: int = 1,
     n_trials_per_job: int = 10,
     study_name: str = None,
-    with_db: bool = False,
     data: str = "data/oc20_3k_train.lmdb",
     pruner: str = "Median",
     sampler: str = "CmaEs",
@@ -31,13 +30,8 @@ def tune(
         print("Aborting")
         return
 
-    if with_db and study_name is None:
-        print("If running on DB, study_name must be provided")
-        print("Aborting")
-        return
-
-    if (not with_db) and n_jobs > 1:
-        print("If running more than 1 job, with_db must be true")
+    if study_name is None:
+        print("study_name must be provided")
         print("Aborting")
         return
 
@@ -46,8 +40,7 @@ def tune(
             f"Warning: running {n_jobs} jobs with only {num_gpus()} GPUs, trouble ahead"
         )
 
-    local = "on DB" if with_db else "locally"
-    print(f"Running hyperparam tuning {local} with:")
+    print(f"Running hyperparam tuning with:")
     print(f" - study_name: {study_name}")
     print(f" - dataset: {data}")
     print(f" - n_trials_per_job: {n_trials_per_job}")
@@ -56,7 +49,7 @@ def tune(
     print(f" - num epochs: {n_epochs}")
 
     _ = get_or_create_study(
-        study_name=study_name, with_db=with_db, pruner=pruner, sampler=sampler
+        study_name=study_name, pruner=pruner, sampler=sampler
     )
 
     if params == "env":
@@ -70,40 +63,25 @@ def tune(
         for k, v in params_dict.items():
             print(f"   - {k}: {v}")
 
-    if not with_db:
-        tune_local(
+
+    Parallel(n_jobs=n_jobs)(
+        delayed(tune_local)(
             study_name=study_name,
-            with_db=with_db,
             pruner=pruner,
             sampler=sampler,
             n_epochs=n_epochs,
             data=data,
             n_trials=n_trials_per_job,
             params_dict=params_dict,
-            gpu_device=0,
+            gpu_device=i,
             verbose=verbose,
         )
-    else:
-        Parallel(n_jobs=n_jobs)(
-            delayed(tune_local)(
-                study_name=study_name,
-                with_db=with_db,
-                pruner=pruner,
-                sampler=sampler,
-                n_epochs=n_epochs,
-                data=data,
-                n_trials=n_trials_per_job,
-                params_dict=params_dict,
-                gpu_device=i,
-                verbose=verbose,
-            )
-            for i in range(n_jobs)
-        )
+        for i in range(n_jobs)
+    )
 
 
 def tune_local(
     study_name: str,
-    with_db: bool,
     pruner: str,
     sampler: str,
     n_epochs: int,
@@ -115,7 +93,7 @@ def tune_local(
 ):
     os.environ["GPU_VISIBLE_DEVICES"] = str(gpu_device)
     study = get_or_create_study(
-        study_name=study_name, with_db=with_db, pruner=pruner, sampler=sampler
+        study_name=study_name, pruner=pruner, sampler=sampler
     )
     objective = mk_objective(
         verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict

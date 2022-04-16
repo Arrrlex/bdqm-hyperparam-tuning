@@ -42,10 +42,7 @@ def tune(
         10, help="number of trials (num of models to train) per job"
     ),
     study_name: str = typer.Option(
-        None, help="name of the study (required if with_db=True)"
-    ),
-    with_db: bool = typer.Option(
-        False, help="store trials on MySQL database, or locally to this job"
+        ..., help="name of the study"
     ),
     data: str = typer.Option("data/oc20_3k_train.lmdb", help="Train dataset"),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
@@ -98,7 +95,6 @@ def tune(
         n_jobs=n_jobs,
         n_trials_per_job=n_trials_per_job,
         study_name=study_name,
-        with_db=with_db,
         data=data,
         pruner=pruner,
         sampler=sampler,
