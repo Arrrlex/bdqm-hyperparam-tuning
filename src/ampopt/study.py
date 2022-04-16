@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 import optuna
+from optuna import visualization as viz
 from optuna.samplers import TPESampler, CmaEsSampler, GridSampler, RandomSampler
 from optuna.pruners import HyperbandPruner, MedianPruner, NopPruner
 from dotenv import dotenv_values
@@ -85,11 +86,20 @@ def generate_report(study_name: str):
         return
 
     study = get_study(study_name)
-    fig = optuna.visualization.plot_contour(study, params=["num_layers", "num_nodes"])
-    fig.write_image(report_dir / "contour_plot.png")
 
-    optuna.visualization.plot_intermediate_values(study).write_image(
+    viz.plot_contour(study, params=["num_layers", "num_nodes"]).write_image(
+        report_dir / "contour_plot.png")
+
+    viz.plot_intermediate_values(study).write_image(
         report_dir / "intermediate.png"
+    )
+
+    viz.plot_optimization_history(study).write_image(
+        report_dir / "history.png"
+    )
+
+    viz.plot_param_importances(study).write_image(
+        report_dir / "param_importance.png"
     )
 
     print(f"Best params: {study.best_params} with MAE {study.best_value}")
