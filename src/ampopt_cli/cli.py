@@ -157,13 +157,17 @@ def run_pace_tuning_job(
 def tune_local(
     study_name: str = typer.Option(...),
     data: str = typer.Option(...),
-    n_trials_per_job: int = typer.Option(...),
+    n_trials: int = typer.Option(...),
     n_epochs: int = typer.Option(...),
-    params: str = typer.Option(...),
+    params: str = typer.Option(""),
     verbose: bool = typer.Option(...),
 ):
     """For internal use only."""
+    from ampopt.tuning import tune_local
+    from ampopt.utils import parse_params
 
+    tune_local(study_name=study_name, data=data, n_trials=n_trials, n_epochs=n_epochs,
+    params_dict=parse_params(params), verbose=verbose)
 
 
 # Utilities

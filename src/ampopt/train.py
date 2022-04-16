@@ -60,7 +60,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
                     "policy": "StepLR",
                     "params": {
                         'step_size': 100,
-                        **get("gamma", 0.1, 1),
+                        **get("gamma", 0.1, 1.),
                     },
                 },
                 "batch_size": 256,

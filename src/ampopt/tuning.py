@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 import subprocess
+import os
 
 from ampopt.study import get_or_create_study, get_study
 from ampopt.train import mk_objective
@@ -72,17 +73,17 @@ def tune(
             verbose=verbose,
         )
     else:
-        cmd = ["conda", "run", "-n", "bdqm-hpopt"]
-        cmd += ["ampopt", "tune-local"]
+        cmd = ["ampopt", "tune-local"]
         cmd += ["--study-name", study_name]
         cmd += ["--data", data]
-        cmd += ["--n-trials-per-job", str(n_trials_per_job)]
+        cmd += ["--n-trials", str(n_trials_per_job)]
         cmd += ["--n-epochs", str(n_epochs)]
-        cmd += ["--params", format_params(**params_dict)]
-        cmd += ["--verbose", str(verbose)]
+        if params_dict:
+            cmd += ["--params", format_params(**params_dict)]
+        if verbose:
+            cmd.append("--verbose")
         for i in range(n_jobs):
-            print(' '.join(cmd))
-            subprocess.run(cmd, env={"CUDA_VISIBLE_DEVICES": str(i)})
+            subprocess.Popen(cmd, env={**os.environ, "CUDA_VISIBLE_DEVICES": str(i)})
 
 
 def tune_local(
