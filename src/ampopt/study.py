@@ -1,6 +1,8 @@
 from functools import lru_cache
 
 import optuna
+from optuna.samplers import TPESampler, CmaEsSampler, GridSampler, RandomSampler
+from optuna.pruners import HyperbandPruner, MedianPruner, NopPruner
 from dotenv import dotenv_values
 
 from ampopt.utils import ampopt_path
@@ -37,25 +39,23 @@ def get_all_studies():
 
 def get_or_create_study(study_name: str, sampler: str, pruner: str):
     samplers = {
-        "CmaEs": optuna.samplers.CmaEsSampler(n_startup_trials=10),
-        "TPE": optuna.samplers.TPESampler(n_startup_trials=40),
-        "Random": optuna.samplers.RandomSampler(),
-        "Grid": optuna.samplers.GridSampler(
-            search_space={"num_layers": range(3, 9), "num_nodes": range(4, 16)}
-        ),
+        "CmaEs": CmaEsSampler(n_startup_trials=10),
+        "TPE": TPESampler(n_startup_trials=40),
+        "Random": RandomSampler(),
+        "Grid": GridSampler(search_space={"num_layers": range(3, 9), "num_nodes": range(4, 16)}),
     }
 
     pruners = {
-        "Hyperband": optuna.pruners.HyperbandPruner(),
-        "Median": optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=10),
-        "None": optuna.pruners.NopPruner(),
+        "Hyperband": HyperbandPruner(),
+        "Median": MedianPruner(n_startup_trials=10, n_warmup_steps=10),
+        "None": NopPruner(),
     }
 
     return optuna.create_study(
         sampler=samplers[sampler],
         pruner=pruners[pruner],
         study_name=study_name,
-        connection_string=connection_string(),
+        storage=connection_string(),
         load_if_exists=True,
     )
 
