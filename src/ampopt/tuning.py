@@ -81,6 +81,7 @@ def tune(
         cmd += ["--params", format_params(**params_dict)]
         cmd += ["--verbose", str(verbose)]
         for i in range(n_jobs):
+            print(' '.join(cmd))
             subprocess.run(cmd, env={"CUDA_VISIBLE_DEVICES": str(i)})
 
 
