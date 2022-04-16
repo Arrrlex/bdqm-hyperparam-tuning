@@ -91,7 +91,7 @@ def tune_local(
     gpu_device: int,
     verbose: bool,
 ):
-    os.environ["GPU_VISIBLE_DEVICES"] = str(gpu_device)
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_device)
     study = get_or_create_study(
         study_name=study_name, pruner=pruner, sampler=sampler
     )
