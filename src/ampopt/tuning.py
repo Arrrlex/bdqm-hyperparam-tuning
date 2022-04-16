@@ -1,12 +1,11 @@
 from typing import Any, Dict
 
-from joblib import Parallel, delayed
-import torch
+import subprocess
 
-from ampopt.study import get_or_create_study
+from ampopt.study import get_or_create_study, get_study
 from ampopt.train import mk_objective
 from ampopt.utils import (is_login_node, num_gpus, parse_params,
-                          read_params_from_env)
+                          read_params_from_env, format_params)
 
 
 def tune(
@@ -43,7 +42,7 @@ def tune(
     print(f"Running hyperparam tuning with:")
     print(f" - study_name: {study_name}")
     print(f" - dataset: {data}")
-    print(f" - n_trials_per_job: {n_trials_per_job}")
+    print(f" - n_trials: {n_trials_per_job}")
     print(f" - sampler: {sampler}")
     print(f" - pruner: {pruner}")
     print(f" - num epochs: {n_epochs}")
@@ -63,40 +62,39 @@ def tune(
         for k, v in params_dict.items():
             print(f"   - {k}: {v}")
 
-
-    Parallel(n_jobs=n_jobs)(
-        delayed(tune_local)(
+    if n_jobs == 1:
+        tune_local(
             study_name=study_name,
-            pruner=pruner,
-            sampler=sampler,
             n_epochs=n_epochs,
             data=data,
             n_trials=n_trials_per_job,
             params_dict=params_dict,
-            gpu_device=i,
             verbose=verbose,
         )
-        for i in range(n_jobs)
-    )
+    else:
+        for i in range(n_jobs):
+            cmd = [f"CUDA_VISIBLE_DEVICES={i}"]
+            cmd += ["conda", "run", "-n", "bdqm-hpopt"]
+            cmd += ["ampopt", "tune-local"]
+            cmd += ["--study-name", study_name]
+            cmd += ["--data", data]
+            cmd += ["--n-trials-per-job", str(n_trials_per_job)]
+            cmd += ["--n-epochs", str(n_epochs)]
+            cmd += ["--params", format_params(**params_dict)]
+            cmd += ["--verbose", verbose]
+            subprocess.run(cmd)
 
 
 def tune_local(
     study_name: str,
-    pruner: str,
-    sampler: str,
     n_epochs: int,
     data: str,
     n_trials: int,
     params_dict: Dict[str, Any],
-    gpu_device: int,
     verbose: bool,
 ):
-    study = get_or_create_study(
-        study_name=study_name, pruner=pruner, sampler=sampler
-    )
+    study = get_study(study_name=study_name)
     objective = mk_objective(
         verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict
     )
-
-    with torch.cuda.device(gpu_device):
-        study.optimize(objective, n_trials=n_trials)
+    study.optimize(objective, n_trials=n_trials)

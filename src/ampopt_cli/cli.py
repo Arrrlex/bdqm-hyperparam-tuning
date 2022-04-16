@@ -153,6 +153,18 @@ def run_pace_tuning_job(
         n_epochs=n_epochs,
     )
 
+@app.command()
+def tune_local(
+    study_name: str = typer.Option(...),
+    data: str = typer.Option(...),
+    n_trials_per_job: int = typer.Option(...),
+    n_epochs: int = typer.Option(...),
+    params: str = typer.Option(...),
+    verbose: bool = typer.Option(...),
+):
+    """For internal use only."""
+
+
 
 # Utilities
 

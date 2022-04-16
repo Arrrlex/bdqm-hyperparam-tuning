@@ -48,3 +48,6 @@ def parse_params(param_string, prefix="") -> Dict[str, Any]:
         k, v = param_pair.split("=")
         params[prefix + k] = _cast(v)
     return params
+
+def format_params(**params):
+    return ",".join(f"{k}={v}" for k,v in sorted(params.items()))
