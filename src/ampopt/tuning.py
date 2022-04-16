@@ -1,4 +1,3 @@
-import os
 from typing import Any, Dict
 
 from joblib import Parallel, delayed
@@ -92,13 +91,12 @@ def tune_local(
     gpu_device: int,
     verbose: bool,
 ):
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_device)
-
-    print(f"Current device is {torch.cuda.current_device()}")
     study = get_or_create_study(
         study_name=study_name, pruner=pruner, sampler=sampler
     )
     objective = mk_objective(
         verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict
     )
-    study.optimize(objective, n_trials=n_trials)
+
+    with torch.cuda.device(gpu_device):
+        study.optimize(objective, n_trials=n_trials)
