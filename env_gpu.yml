@@ -18,6 +18,7 @@ dependencies:
   - pytorch-spline-conv
   - python-dotenv
   - pymysql
+  - ipykernel
   - pip:
     - cffi
     - wandb
