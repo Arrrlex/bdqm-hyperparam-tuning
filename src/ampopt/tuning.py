@@ -81,7 +81,7 @@ def tune(
             cmd += ["--n-trials-per-job", str(n_trials_per_job)]
             cmd += ["--n-epochs", str(n_epochs)]
             cmd += ["--params", format_params(**params_dict)]
-            cmd += ["--verbose", verbose]
+            cmd += ["--verbose", str(verbose)]
             subprocess.run(cmd)
 
 
