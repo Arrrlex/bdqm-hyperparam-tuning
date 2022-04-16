@@ -48,7 +48,6 @@ def mk_objective(verbose, epochs, train_fname, **params):
                 **get("num_nodes", 4, 15),
                 "name": "singlenn",
                 "get_forces": False,
-                **get("batchnorm", 0, 1),
                 "dropout": 1,
                 **get("dropout_rate", 0.0, 1.0),
                 "initialization": "xavier",
@@ -56,7 +55,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
             },
             "optim": {
                 "gpus": gpus,
-                **get("lr", 1e-5, 1e-2, log=True),
+                **get("lr", 1e-5, 1e-1, log=True),
                 "scheduler": {
                     "policy": "StepLR",
                     "params": {
@@ -64,7 +63,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
                         **get("gamma", 0.1, 1),
                     },
                 },
-                **get("batch_size", 100, 500, 50),
+                "batch_size": 256,
                 "loss": "mae",
                 "epochs": epochs,
             },
