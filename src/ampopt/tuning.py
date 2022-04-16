@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict
 
 from joblib import Parallel, delayed
+import torch
 
 from ampopt.study import get_or_create_study
 from ampopt.train import mk_objective
@@ -92,6 +93,8 @@ def tune_local(
     verbose: bool,
 ):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_device)
+
+    print(f"Current device is {torch.cuda.current_device()}")
     study = get_or_create_study(
         study_name=study_name, pruner=pruner, sampler=sampler
     )
