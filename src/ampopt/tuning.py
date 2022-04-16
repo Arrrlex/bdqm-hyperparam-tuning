@@ -72,17 +72,16 @@ def tune(
             verbose=verbose,
         )
     else:
+        cmd = ["conda", "run", "-n", "bdqm-hpopt"]
+        cmd += ["ampopt", "tune-local"]
+        cmd += ["--study-name", study_name]
+        cmd += ["--data", data]
+        cmd += ["--n-trials-per-job", str(n_trials_per_job)]
+        cmd += ["--n-epochs", str(n_epochs)]
+        cmd += ["--params", format_params(**params_dict)]
+        cmd += ["--verbose", str(verbose)]
         for i in range(n_jobs):
-            cmd = [f"CUDA_VISIBLE_DEVICES={i}"]
-            cmd += ["conda", "run", "-n", "bdqm-hpopt"]
-            cmd += ["ampopt", "tune-local"]
-            cmd += ["--study-name", study_name]
-            cmd += ["--data", data]
-            cmd += ["--n-trials-per-job", str(n_trials_per_job)]
-            cmd += ["--n-epochs", str(n_epochs)]
-            cmd += ["--params", format_params(**params_dict)]
-            cmd += ["--verbose", str(verbose)]
-            subprocess.run(cmd)
+            subprocess.run(cmd, env={"CUDA_VISIBLE_DEVICES": str(i)})
 
 
 def tune_local(
