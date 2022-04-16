@@ -14,13 +14,18 @@ import torch
 from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData, FeatureScaler, TargetScaler
 from ase import Atoms
-from ase.io import Trajectory
+import ase.io
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
 from ampopt.utils import ampopt_path
 
+def read_data(fname):
+    if fname.endswith('.traj'):
+        return ase.io.Trajectory(fname)
+    else:
+        return ase.io.read(fname, ':')
 
 def compute_gmp(
     train: str,
@@ -40,14 +45,15 @@ def compute_gmp(
             print(f"{path} already exists, aborting")
             return
 
-    trajs = [Trajectory(fname) for fname in fnames]
+    trajs = [read_data(fname) for fname in fnames]
 
     torch.set_default_tensor_type(torch.DoubleTensor)
 
     print(f"Fitting to {train}...")
-    featurizer = mk_feature_pipeline(trajs[0])
+    feats, featurizer = mk_feature_pipeline(trajs[0])
+    save_to_lmdb(feats, featurizer, lmdb_paths[0])
 
-    for fname, traj, lmdb_fname in zip(fnames, trajs, lmdb_paths):
+    for fname, traj, lmdb_fname in zip(fnames, trajs, lmdb_paths)[1:]:
         print(f"\nLooking at {fname}:")
         feats = featurizer.transform(traj)
         save_to_lmdb(feats, featurizer, lmdb_fname)
@@ -94,7 +100,8 @@ def mk_feature_pipeline(train_imgs: Sequence) -> Pipeline:
         ]
     )
 
-    return featurizer_pipeline.fit(train_imgs)
+    transformed_data = featurizer_pipeline.fit_transform(train_imgs)
+    return transformed_data, featurizer_pipeline
 
 
 class ScalerTransformer:
