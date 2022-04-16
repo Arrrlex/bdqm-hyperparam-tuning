@@ -14,7 +14,6 @@ from ampopt.utils import ampopt_path, parse_params
 def run_pace_tuning_job(
     study_name: str,
     data="data/oc20_3k_train.lmdb",
-    n_jobs: int = 5,
     n_trials_per_job: int = 10,
     pruner: str = "Median",
     sampler: str = "CmaEs",
@@ -26,8 +25,6 @@ def run_pace_tuning_job(
 
     queue_job(
         "tune-amptorch-hyperparams",
-        template_args={"n_jobs": n_jobs},
-        n_jobs=n_jobs,
         n_trials_per_job=n_trials_per_job,
         data=data,
         study_name=study_name,
@@ -54,29 +51,18 @@ def check_job_valid(job_name: str):
     assert match.group(1).strip() == job_name
 
 
-def queue_job(job_name, template_args=None, **extra_args):
+def queue_job(job_name, **extra_args):
     """
     Schedule a job to be run.
 
-    template_args are used to fill in the job template.
     **extra_args are passed as environment variables to the job script.
     """
     path = to_path(job_name)
-    if template_args is not None:
-        path = apply_template_args(path, template_args)
     extras = ",".join(f"{k}={v}" for k, v in extra_args.items())
     cmd = f"qsub {path}"
     if extras:
         cmd += f' -v "{extras}"'
     subprocess.run(cmd, shell=True)
-
-
-def apply_template_args(path, template_args):
-    pbs_script = path.read_text().format(**template_args)
-    stem = path.stem + "_" + "_".join(f"{k}_{v}" for k, v in sorted(template_args.items()))
-    new_path = path.parent / "filled-templates" / f"{stem}.pbs"
-    new_path.write_text(pbs_script)
-    return new_path
 
 
 def qstat():

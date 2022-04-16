@@ -112,7 +112,6 @@ def tune(
 def run_pace_tuning_job(
     study_name: str = typer.Option(..., help="name of the study"),
     data: str = typer.Option("data/oc20_3k_train.lmdb", help="Train dataset"),
-    n_jobs: int = typer.Option(5, help="Number of PACE jobs to run"),
     n_trials_per_job: int = typer.Option(
         10, help="number of trials (num of models to train)"
     ),
@@ -151,7 +150,6 @@ def run_pace_tuning_job(
     run_pace_tuning_job(
         study_name=study_name,
         data=data,
-        n_jobs=n_jobs,
         n_trials_per_job=n_trials_per_job,
         pruner=pruner,
         sampler=sampler,
