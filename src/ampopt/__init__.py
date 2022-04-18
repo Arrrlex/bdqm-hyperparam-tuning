@@ -1,13 +1,13 @@
 from ampopt.jobs import (ensure_mysql_running, run_pace_tuning_job,
                          view_jobs)
-from ampopt.preprocess import compute_gmp
+from ampopt.preprocess import preprocess
 from ampopt.study import delete_studies, generate_report, view_studies
 from ampopt.tuning import tune
 from ampopt.train import eval_score
 
 __all__ = [
     "tune",
-    "compute_gmp",
+    "preprocess",
     "delete_studies",
     "generate_report",
     "view_studies",

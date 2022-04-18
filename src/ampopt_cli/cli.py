@@ -28,9 +28,9 @@ def preprocess(
     if others is None:
         others = []
 
-    from ampopt.preprocess import compute_gmp
+    from ampopt import preprocess
 
-    compute_gmp(train, *others, data_dir=data_dir)
+    preprocess(train, *others, data_dir=data_dir)
 
 
 # Tuning
@@ -88,7 +88,7 @@ def tune(
     - Grid uses a grid search (note: the code in study.py must be modified in
     to change the search space for Grid search)
     """
-    from ampopt.tuning import tune
+    from ampopt import tune
 
     tune(
         jobs=jobs,
@@ -138,7 +138,7 @@ def run_pace_tuning_job(
     - Grid uses a grid search (note: the code in study.py must be modified in
     to change the search space for Grid search)
     """
-    from ampopt.jobs import run_pace_tuning_job
+    from ampopt import run_pace_tuning_job
 
     run_pace_tuning_job(
         study=study,
@@ -184,7 +184,7 @@ def generate_report(study: str):
 
     The report will be saved to the folder `report/{study}`.
     """
-    from ampopt.study import generate_report
+    from ampopt import generate_report
 
     generate_report(study)
 
@@ -194,7 +194,7 @@ def delete_studies(studies: List[str]):
     """
     Delete studies from the MySQL DB.
     """
-    from ampopt.study import delete_studies
+    from ampopt import delete_studies
 
     delete_studies(*studies)
 
@@ -204,7 +204,7 @@ def view_studies():
     """
     View basic information about all studies in the DB.
     """
-    from ampopt.study import view_studies
+    from ampopt import view_studies
 
     view_studies()
 
@@ -214,7 +214,7 @@ def ensure_mysql_running():
     """
     If MySQL job is not running, start it.
     """
-    from ampopt.jobs import ensure_mysql_running
+    from ampopt import ensure_mysql_running
 
     ensure_mysql_running()
 
@@ -224,6 +224,6 @@ def view_jobs(name: str = None):
     """
     View list of all running jobs for the current user.
     """
-    from ampopt.jobs import view_jobs
+    from ampopt import view_jobs
 
     view_jobs(name)
