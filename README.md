@@ -1,8 +1,24 @@
-# AmpOpt
-Code for Hyperparameter Optimization project for "Big Data &amp; Quantum
+# AmpOpt<a name="ampopt"></a>
+
+## Contents<a name="contents"></a>
+
+<!-- mdformat-toc start --slug=github --maxlevel=6 --minlevel=1 -->
+
+- [AmpOpt](#ampopt)
+  - [Contents](#contents)
+  - [Introduction](#introduction)
+  - [Structure](#structure)
+  - [Installation](#installation)
+  - [Usage](#usage)
+
+<!-- mdformat-toc end -->
+
+## Introduction<a name="introduction"></a>
+
+Code for Hyperparameter Optimization project for "Big Data & Quantum
 Mechanics" (Andrew Medford).
 
-## Structure
+## Structure<a name="structure"></a>
 
 - `jobs` contains `.pbs` files defining jobs to run on PACE
 - `src/ampopt` contains code for preprocessing, running hyperparameter optimization
@@ -15,9 +31,10 @@ Mechanics" (Andrew Medford).
 - `setup-session.sh` is a convenience script for PACE jobs
 - `setup.py` defines how `ampopt` Python package and command are installed.
 
-## Installation
+## Installation<a name="installation"></a>
+
 For setup and installation instructions, please refer to [SETUP.md](docs/SETUP.md).
 
-## Usage
+## Usage<a name="usage"></a>
 
 For usage instructions, please refer to [USAGE.md](docs/USAGE.md).

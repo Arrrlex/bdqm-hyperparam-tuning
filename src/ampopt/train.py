@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from amptorch.trainer import AtomsTrainer
 from optuna.integration.skorch import SkorchPruningCallback
+from optuna.trial import FixedTrial
 from torch import nn
 
 from ampopt.utils import num_gpus, absolute
@@ -94,6 +95,9 @@ def mk_objective(verbose, epochs, train_fname, **params):
 
     return objective
 
+def eval_score(epochs, train_fname, **params):
+    objective = mk_objective(verbose=True, epochs=epochs, train_fname=train_fname)
+    return objective(FixedTrial(params))
 
 def clean_up_checkpoints(identifier):
     for path in Path("checkpoints").glob(f"*{identifier}*"):
