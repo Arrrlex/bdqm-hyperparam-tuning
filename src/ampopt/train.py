@@ -95,7 +95,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
             },
         }
 
-        if train_fname is None:
+        if valid_fname is None:
             config["dataset"]["val_split"] = 0.1
 
         trainer = AtomsTrainer(config)
