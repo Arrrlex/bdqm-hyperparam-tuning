@@ -8,7 +8,7 @@ app = typer.Typer()
 
 
 @app.command()
-def compute_gmp(
+def preprocess(
     train: str = typer.Argument(..., help=".traj file to fit & compute features for"),
     others: Optional[List[str]] = typer.Argument(
         None, help="other .traj files to compute features for"
@@ -18,7 +18,7 @@ def compute_gmp(
     ),
 ) -> None:
     """
-    Precompute GMP features and save to LMDB.
+    Scale, Precompute GMP features and save to LMDB.
 
     The LMDB files are written to the `data_dir` directory. By default, this is the
     `data` directory in the project root.

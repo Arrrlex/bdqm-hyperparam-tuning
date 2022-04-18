@@ -22,12 +22,12 @@ from tqdm.contrib import tenumerate
 from ampopt.utils import absolute, ampopt_path, read_data
 
 
-def compute_gmp(
+def preprocess(
     train: str,
     *others: str,
     data_dir: str = None,
 ) -> None:
-    """Compute GMP features and save to lmdb."""
+    """Scale, Compute GMP features and save to lmdb."""
     fnames = [train] + list(others)
     fnames = [absolute(fname, root="cwd") for fname in fnames]
     print(f"Creating LMDBs from files {', '.join(fnames)}")

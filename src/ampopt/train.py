@@ -108,7 +108,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
 
         # score = trainer.net.history[-1, "val_energy_mae"]
 
-        clean_up_checkpoints(identifier)
+        # clean_up_checkpoints(identifier)
 
         return score
 
