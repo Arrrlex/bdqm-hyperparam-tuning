@@ -19,6 +19,8 @@ dependencies:
   - python-dotenv
   - plotly=5.6.*
   - python-kaleido
+  - jupyterlab >= 3
+  - ipywidgets >= 7.6
   - pymysql
   - ipykernel
   - pip:

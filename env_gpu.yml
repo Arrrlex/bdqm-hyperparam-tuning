@@ -18,6 +18,10 @@ dependencies:
   - pytorch-spline-conv
   - python-dotenv
   - pymysql
+  - plotly=5.6.*
+  - python-kaleido
+  - jupyterlab >= 3
+  - ipywidgets >= 7.6
   - ipykernel
   - pip:
     - cffi
