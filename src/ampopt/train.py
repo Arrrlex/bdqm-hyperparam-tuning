@@ -8,10 +8,9 @@ from amptorch.trainer import AtomsTrainer
 from optuna.integration.skorch import SkorchPruningCallback
 from optuna.trial import FixedTrial
 from torch import nn
-import ase.io
 from sklearn.metrics import mean_absolute_error
 
-from ampopt.utils import absolute, num_gpus
+from ampopt.utils import absolute, num_gpus, read_data
 
 warnings.simplefilter("ignore")
 
@@ -91,9 +90,14 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
         trainer = AtomsTrainer(config)
         trainer.train()
 
-        test_data = list(ase.io.read(valid_path, ":"))
-        y_pred = [a["energy"] for a in trainer.predict(test_data)]
+        if verbose:
+            print("Loading validation data...")
+        test_data = list(read_data(valid_path))
         y_true = [a.get_potential_energy() for a in test_data]
+
+        if verbose:
+            print("Calculating predictions on validation data...")
+        y_pred = [a["energy"] for a in trainer.predict(test_data)]
 
         score = mean_absolute_error(y_true, y_pred)
 

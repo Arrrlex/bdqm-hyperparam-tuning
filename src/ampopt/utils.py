@@ -5,10 +5,16 @@ from pathlib import Path
 from typing import Any, Dict
 
 import torch
+import ase.io
 
 # Path to root of bdqm-hyperparam-tuning repo
 ampopt_path = Path(__file__).resolve().parents[2]
 
+def read_data(fname):
+    if fname.endswith(".traj"):
+        return ase.io.Trajectory(fname)
+    else:
+        return ase.io.read(fname, ":")
 
 @lru_cache
 def num_gpus():

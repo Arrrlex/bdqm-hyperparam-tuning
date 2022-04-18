@@ -19,14 +19,7 @@ from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
-from ampopt.utils import absolute, ampopt_path
-
-
-def read_data(fname):
-    if fname.endswith(".traj"):
-        return ase.io.Trajectory(fname)
-    else:
-        return ase.io.read(fname, ":")
+from ampopt.utils import absolute, ampopt_path, read_data
 
 
 def compute_gmp(
