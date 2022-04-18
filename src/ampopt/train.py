@@ -5,17 +5,21 @@ from shutil import rmtree
 from uuid import uuid4
 
 from amptorch.trainer import AtomsTrainer
+from amptorch.dataset_lmdb import get_lmdb_dataset
 from optuna.integration.skorch import SkorchPruningCallback
 from optuna.trial import FixedTrial
 from torch import nn
 from sklearn.metrics import mean_absolute_error
 
-from ampopt.utils import absolute, num_gpus, read_data
+from ampopt.utils import absolute, num_gpus, read_data, ampopt_path
 
 warnings.simplefilter("ignore")
 
 gpus = min(1, num_gpus())
 
+def get_lmdb_path(path):
+    fname = f"{Path(path).stem}.lmdb"
+    return str(ampopt_path / "data" / fname)
 
 def get_param_dict(params, trial, name, low, *args, **kwargs):
     """
@@ -43,6 +47,12 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
 def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
     train_path = absolute(train_fname, root="cwd")
     valid_path = absolute(valid_fname, root="cwd")
+    valid_lmdb_path = get_lmdb_path(valid_path)
+
+    if verbose:
+        print("Loading validation data...")
+    y_true = [a.get_potential_energy() for a in read_data(valid_path)]
+    test_data = get_lmdb_dataset(valid_lmdb_path)
 
     def objective(trial):
         get = partial(get_param_dict, params, trial)
@@ -91,13 +101,8 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
         trainer.train()
 
         if verbose:
-            print("Loading validation data...")
-        test_data = list(read_data(valid_path))
-        y_true = [a.get_potential_energy() for a in test_data]
-
-        if verbose:
             print("Calculating predictions on validation data...")
-        y_pred = trainer.predict(test_data, disable_tqdm=not verbose)["energy"]
+        y_pred = trainer.predict_from_feats(test_data, disable_tqdm=not verbose)["energy"]
 
         score = mean_absolute_error(y_true, y_pred)
 
