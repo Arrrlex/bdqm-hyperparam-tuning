@@ -43,6 +43,7 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
 
 def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
     train_path = absolute(train_fname, root="cwd")
+    valid_path = absolute(valid_fname, root="cwd")
 
     def objective(trial):
         get = partial(get_param_dict, params, trial)
@@ -90,7 +91,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
         trainer = AtomsTrainer(config)
         trainer.train()
 
-        test_data = ase.io.read(valid_fname)
+        test_data = ase.io.read(valid_path)
         y_pred = [a["energy"] for a in trainer.predict(test_data)]
         y_true = [a.get_potential_energy() for a in test_data]
 
@@ -105,8 +106,8 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
     return objective
 
 
-def eval_score(epochs, train_fname, **params):
-    objective = mk_objective(verbose=True, epochs=epochs, train_fname=train_fname)
+def eval_score(epochs, train_fname, valid_fname, **params):
+    objective = mk_objective(verbose=True, epochs=epochs, train_fname=train_fname, valid_fname=valid_fname)
     return objective(FixedTrial(params))
 
 
