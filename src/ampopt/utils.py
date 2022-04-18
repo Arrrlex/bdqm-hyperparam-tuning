@@ -76,6 +76,5 @@ def absolute(relpath, root="cwd"):
         root_path = ampopt_path
     else:
         raise Exception(f"root={root} not allowed; must be cwd or proj")
-    print(root_path)
 
     return str((root_path / relpath).resolve())
