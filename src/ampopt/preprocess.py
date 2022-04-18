@@ -53,7 +53,7 @@ def compute_gmp(
     feats, featurizer = mk_feature_pipeline(trajs[0])
     save_to_lmdb(feats, featurizer, lmdb_paths[0])
 
-    for fname, traj, lmdb_fname in zip(fnames, trajs, lmdb_paths)[1:]:
+    for fname, traj, lmdb_fname in list(zip(fnames, trajs, lmdb_paths))[1:]:
         print(f"\nLooking at {fname}:")
         feats = featurizer.transform(traj)
         save_to_lmdb(feats, featurizer, lmdb_fname)
@@ -201,7 +201,7 @@ def save_to_lmdb(feats: Sequence, pipeline: Pipeline, lmdb_path: Path) -> None:
 
     db = lmdb.open(
         str(lmdb_path),
-        map_size=64_393_216 * 2,
+        map_size=64_393_216 * 2 * 12,
         subdir=False,
         meminit=False,
         map_async=True,
