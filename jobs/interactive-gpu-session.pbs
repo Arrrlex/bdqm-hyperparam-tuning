@@ -1,7 +1,7 @@
 #PBS -N interactive-gpu-session
 #PBS -l nodes=1:ppn=1:gpus=1
 #PBS -l mem=2gb
-#PBS -l walltime=08:00:00
+#PBS -l walltime=02:00:00
 #PBS -q pace-ice-gpu
 #PBS -I
 
