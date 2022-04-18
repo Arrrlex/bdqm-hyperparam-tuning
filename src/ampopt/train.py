@@ -91,7 +91,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
         trainer = AtomsTrainer(config)
         trainer.train()
 
-        test_data = ase.io.read(valid_path)
+        test_data = list(ase.io.read(valid_path))
         y_pred = [a["energy"] for a in trainer.predict(test_data)]
         y_true = [a.get_potential_energy() for a in test_data]
 
