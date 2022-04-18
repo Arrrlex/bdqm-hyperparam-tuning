@@ -44,17 +44,15 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
     return {name: val}
 
 
-def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
+def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
     train_path = absolute(train_fname, root="cwd")
-    valid_path = absolute(valid_fname, root="cwd")
-    valid_lmdb_path = get_lmdb_path(valid_path)
 
-    if verbose:
-        print("Loading validation data labels...")
-    y_true = [a.get_potential_energy() for a in read_data(valid_path)]
-    if verbose:
-        print("Loading validation LMDB...")
-    test_data = get_lmdb_dataset([valid_lmdb_path], cache_type="full")
+    if valid_fname is not None:
+        valid_path = absolute(valid_fname, root="cwd")
+        if verbose:
+            print("Loading validation data labels...")
+        valid_data = read_data(valid_path)
+        y_valid = [a.get_potential_energy() for a in valid_data]
 
     def objective(trial):
         get = partial(get_param_dict, params, trial)
@@ -87,10 +85,8 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
             "dataset": {
                 "lmdb_path": [train_path],
                 "cache": "full",
-                # "val_split": 0.1,
             },
             "cmd": {
-                # "debug": True, # prevents logging to checkpoints
                 "seed": 12,
                 "identifier": identifier,
                 "dtype": "torch.DoubleTensor",
@@ -99,16 +95,20 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
             },
         }
 
+        if train_fname is None:
+            config["dataset"]["val_split"] = 0.1
+
         trainer = AtomsTrainer(config)
         trainer.train()
 
-        if verbose:
-            print("Calculating predictions on validation data...")
-        y_pred = trainer.predict_from_feats(test_data, disable_tqdm=not verbose)["energy"]
+        if valid_fname is not None:
+            if verbose:
+                print("Calculating predictions on validation data...")
+            y_pred = trainer.predict_from_feats(valid_data, disable_tqdm=not verbose)["energy"]
 
-        score = mean_absolute_error(y_true, y_pred)
-
-        # score = trainer.net.history[-1, "val_energy_mae"]
+            score = mean_absolute_error(y_valid, y_pred)
+        else:
+            score = trainer.net.history[-1, "val_energy_mae"]
 
         # clean_up_checkpoints(identifier)
 
@@ -117,7 +117,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
     return objective
 
 
-def eval_score(epochs, train_fname, valid_fname, **params):
+def eval_score(epochs, train_fname, valid_fname=None, **params):
     objective = mk_objective(verbose=True, epochs=epochs, train_fname=train_fname, valid_fname=valid_fname)
     return objective(FixedTrial(params))
 

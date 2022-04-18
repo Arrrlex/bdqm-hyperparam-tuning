@@ -12,8 +12,7 @@ def tune(
     jobs: int = 1,
     trials: int = 10,
     study: str = None,
-    train: str = "oc20_3k_train.lmdb",
-    valid: str = "oc20_3k_valid.traj",
+    data: str = "oc20_3k_train.lmdb",
     pruner: str = "Median",
     sampler: str = "CmaEs",
     epochs: int = 100,
@@ -42,8 +41,7 @@ def tune(
 
     print(f"Running hyperparam tuning with:")
     print(f" - study_name: {study}")
-    print(f" - train dataset: {train}")
-    print(f" - valid dataset: {valid}")
+    print(f" - dataset: {data}")
     print(f" - n_trials: {trials}")
     print(f" - sampler: {sampler}")
     print(f" - pruner: {pruner}")
@@ -66,8 +64,7 @@ def tune(
         tune_local(
             study_name=study,
             n_epochs=epochs,
-            train=train,
-            valid=valid,
+            data=data,
             n_trials=trials,
             params_dict=params_dict,
             verbose=verbose,
@@ -89,14 +86,13 @@ def tune(
 def tune_local(
     study_name: str,
     n_epochs: int,
-    train: str,
-    valid: str,
+    data: str,
     n_trials: int,
     params_dict: Dict[str, Any],
     verbose: bool,
 ):
     study = get_study(study_name=study_name)
     objective = mk_objective(
-        verbose=verbose, epochs=n_epochs, train_fname=train, valid_fname=valid, **params_dict
+        verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict
     )
     study.optimize(objective, n_trials=n_trials)

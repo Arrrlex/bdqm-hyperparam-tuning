@@ -43,8 +43,7 @@ def tune(
         ..., help="number of trials (num of models to train) per job"
     ),
     study: str = typer.Option(..., help="name of the study"),
-    train: str = typer.Option(..., help="Train dataset"),
-    valid: str = typer.Option(..., help="Valid dataset"),
+    data: str = typer.Option(..., help="Train dataset"),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     verbose: bool = typer.Option(
@@ -95,8 +94,7 @@ def tune(
         jobs=jobs,
         trials=trials,
         study=study,
-        train=train,
-        valid=valid,
+        data=data,
         pruner=pruner,
         sampler=sampler,
         verbose=verbose,
@@ -108,8 +106,7 @@ def tune(
 @app.command()
 def run_pace_tuning_job(
     study: str = typer.Option(..., help="name of the study"),
-    train: str = typer.Option(..., help="Train dataset"),
-    valid: str = typer.Option(..., help="Valid dataset"),
+    data: str = typer.Option(..., help="Train dataset"),
     trials: int = typer.Option(..., help="number of trials (num of models to train)"),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
@@ -145,8 +142,7 @@ def run_pace_tuning_job(
 
     run_pace_tuning_job(
         study=study,
-        train=train,
-        valid=valid,
+        data=data,
         trials=trials,
         pruner=pruner,
         sampler=sampler,
