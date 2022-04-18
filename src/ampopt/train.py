@@ -97,7 +97,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
 
         if verbose:
             print("Calculating predictions on validation data...")
-        y_pred = [a["energy"] for a in trainer.predict(test_data, disable_tqdm=not verbose)]
+        y_pred = trainer.predict(test_data, disable_tqdm=not verbose)["energy"]
 
         score = mean_absolute_error(y_true, y_pred)
 
