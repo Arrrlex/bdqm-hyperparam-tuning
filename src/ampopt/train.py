@@ -8,6 +8,8 @@ from amptorch.trainer import AtomsTrainer
 from optuna.integration.skorch import SkorchPruningCallback
 from optuna.trial import FixedTrial
 from torch import nn
+import ase.io
+from sklearn.metrics import mean_absolute_error
 
 from ampopt.utils import absolute, num_gpus
 
@@ -39,7 +41,7 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
     return {name: val}
 
 
-def mk_objective(verbose, epochs, train_fname, **params):
+def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
     train_path = absolute(train_fname, root="cwd")
 
     def objective(trial):
@@ -73,7 +75,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
             "dataset": {
                 "lmdb_path": [train_path],
                 "cache": "full",
-                "val_split": 0.1,
+                # "val_split": 0.1,
             },
             "cmd": {
                 # "debug": True, # prevents logging to checkpoints
@@ -88,7 +90,13 @@ def mk_objective(verbose, epochs, train_fname, **params):
         trainer = AtomsTrainer(config)
         trainer.train()
 
-        score = trainer.net.history[-1, "val_energy_mae"]
+        test_data = ase.io.read(valid_fname)
+        y_pred = [a["energy"] for a in trainer.predict(test_data)]
+        y_true = [a.get_potential_energy() for a in test_data]
+
+        score = mean_absolute_error(y_true, y_pred)
+
+        # score = trainer.net.history[-1, "val_energy_mae"]
 
         clean_up_checkpoints(identifier)
 
