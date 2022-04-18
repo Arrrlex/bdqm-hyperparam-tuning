@@ -19,7 +19,7 @@ from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
-from ampopt.utils import ampopt_path
+from ampopt.utils import ampopt_path, absolute
 
 def read_data(fname):
     if fname.endswith('.traj'):
@@ -30,13 +30,17 @@ def read_data(fname):
 def compute_gmp(
     train: str,
     *others: str,
-    data_dir: str = "data",
+    data_dir: str = None,
 ) -> None:
     """Compute GMP features and save to lmdb."""
     fnames = [train] + list(others)
+    fnames = [absolute(fname, root="cwd") for fname in fnames]
     print(f"Creating LMDBs from files {', '.join(fnames)}")
 
-    data_dir = Path(data_dir)
+    if data_dir is None:
+        data_dir = Path(absolute("data", root="proj"))
+    else:
+        data_dir = Path(absolute(data_dir, root="cwd"))
     data_dir.mkdir(exist_ok=True)
     lmdb_paths = [data_dir / f"{Path(fname).stem}.lmdb" for fname in fnames]
 

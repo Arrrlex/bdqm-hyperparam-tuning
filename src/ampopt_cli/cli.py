@@ -14,13 +14,14 @@ def compute_gmp(
         None, help="other .traj files to compute features for"
     ),
     data_dir: Optional[str] = typer.Option(
-        "data", help="directory to write LMDB files into"
+        None, help="directory to write LMDB files into"
     ),
 ) -> None:
     """
     Precompute GMP features and save to LMDB.
 
-    The LMDB files are written to the `data_dir` directory.
+    The LMDB files are written to the `data_dir` directory. By default, this is the
+    `data` directory in the project root.
 
     Note: only the first argument TRAIN is used to fit the feature pipeline.
     """
@@ -37,20 +38,20 @@ def compute_gmp(
 
 @app.command()
 def tune(
-    n_jobs: int = typer.Option(1, help="number of jobs to run in parallel"),
-    n_trials_per_job: int = typer.Option(
-        10, help="number of trials (num of models to train) per job"
+    jobs: int = typer.Option(1, help="number of jobs to run in parallel"),
+    trials: int = typer.Option(
+        ..., help="number of trials (num of models to train) per job"
     ),
-    study_name: str = typer.Option(
+    study: str = typer.Option(
         ..., help="name of the study"
     ),
-    data: str = typer.Option("data/oc20_3k_train.lmdb", help="Train dataset"),
+    data: str = typer.Option(..., help="Train dataset"),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     verbose: bool = typer.Option(
         False, help="Whether or not to log the per-epoch results"
     ),
-    n_epochs: int = typer.Option(100, help="number of epochs for each trial"),
+    epochs: int = typer.Option(100, help="number of epochs for each trial"),
     params: str = typer.Option("", help="comma-separated list of key=value HP pairs"),
 ):
     """
@@ -92,28 +93,28 @@ def tune(
     from ampopt.tuning import tune
 
     tune(
-        n_jobs=n_jobs,
-        n_trials_per_job=n_trials_per_job,
-        study_name=study_name,
+        jobs=jobs,
+        trials=trials,
+        study=study,
         data=data,
         pruner=pruner,
         sampler=sampler,
         verbose=verbose,
-        n_epochs=n_epochs,
+        epochs=epochs,
         params=params,
     )
 
 
 @app.command()
 def run_pace_tuning_job(
-    study_name: str = typer.Option(..., help="name of the study"),
-    data: str = typer.Option("data/oc20_3k_train.lmdb", help="Train dataset"),
-    n_trials_per_job: int = typer.Option(
-        10, help="number of trials (num of models to train)"
+    study: str = typer.Option(..., help="name of the study"),
+    data: str = typer.Option(..., help="Train dataset"),
+    trials: int = typer.Option(
+        ..., help="number of trials (num of models to train)"
     ),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
-    n_epochs: int = typer.Option(100, help="number of epochs for each trial"),
+    epochs: int = typer.Option(100, help="number of epochs for each trial"),
     params: str = typer.Option("", help="comma-separated list of key=value HP pairs"),
 ):
     """
@@ -144,21 +145,21 @@ def run_pace_tuning_job(
     from ampopt.jobs import run_pace_tuning_job
 
     run_pace_tuning_job(
-        study_name=study_name,
+        study=study,
         data=data,
-        n_trials_per_job=n_trials_per_job,
+        trials=trials,
         pruner=pruner,
         sampler=sampler,
         params=params,
-        n_epochs=n_epochs,
+        epochs=epochs,
     )
 
 @app.command()
 def tune_local(
-    study_name: str = typer.Option(...),
+    study: str = typer.Option(...),
     data: str = typer.Option(...),
-    n_trials: int = typer.Option(...),
-    n_epochs: int = typer.Option(...),
+    trials: int = typer.Option(...),
+    epochs: int = typer.Option(...),
     params: str = typer.Option(""),
     verbose: bool = typer.Option(...),
 ):
@@ -166,7 +167,7 @@ def tune_local(
     from ampopt.tuning import tune_local
     from ampopt.utils import parse_params
 
-    tune_local(study_name=study_name, data=data, n_trials=n_trials, n_epochs=n_epochs,
+    tune_local(study_name=study, data=data, n_trials=trials, n_epochs=epochs,
     params_dict=parse_params(params), verbose=verbose)
 
 
@@ -186,13 +187,13 @@ def generate_report(study: str):
 
 
 @app.command()
-def delete_studies(study_names: List[str]):
+def delete_studies(studies: List[str]):
     """
     Delete studies from the MySQL DB.
     """
     from ampopt.study import delete_studies
 
-    delete_studies(*study_names)
+    delete_studies(*studies)
 
 
 @app.command()

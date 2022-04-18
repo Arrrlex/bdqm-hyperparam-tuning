@@ -6,21 +6,21 @@ import os
 from ampopt.study import get_or_create_study, get_study
 from ampopt.train import mk_objective
 from ampopt.utils import (is_login_node, num_gpus, parse_params,
-                          read_params_from_env, format_params)
+                          read_params_from_env, format_params, absolute)
 
 
 def tune(
-    n_jobs: int = 1,
-    n_trials_per_job: int = 10,
-    study_name: str = None,
-    data: str = "data/oc20_3k_train.lmdb",
+    jobs: int = 1,
+    trials: int = 10,
+    study: str = None,
+    data: str = "oc20_3k_train.lmdb",
     pruner: str = "Median",
     sampler: str = "CmaEs",
-    n_epochs: int = 100,
+    epochs: int = 100,
     params: str = "",
     verbose: bool = False,
 ):
-    if n_jobs < 1:
+    if jobs < 1:
         print("Must be at least 1 job")
         print("Aborting")
         return
@@ -30,26 +30,26 @@ def tune(
         print("Aborting")
         return
 
-    if study_name is None:
+    if study is None:
         print("study_name must be provided")
         print("Aborting")
         return
 
-    if 0 < num_gpus() < n_jobs:
+    if 0 < num_gpus() < jobs:
         print(
-            f"Warning: running {n_jobs} jobs with only {num_gpus()} GPUs, trouble ahead"
+            f"Warning: running {jobs} jobs with only {num_gpus()} GPUs, trouble ahead"
         )
 
     print(f"Running hyperparam tuning with:")
-    print(f" - study_name: {study_name}")
+    print(f" - study_name: {study}")
     print(f" - dataset: {data}")
-    print(f" - n_trials: {n_trials_per_job}")
+    print(f" - n_trials: {trials}")
     print(f" - sampler: {sampler}")
     print(f" - pruner: {pruner}")
-    print(f" - num epochs: {n_epochs}")
+    print(f" - num epochs: {epochs}")
 
     _ = get_or_create_study(
-        study_name=study_name, pruner=pruner, sampler=sampler
+        study_name=study, pruner=pruner, sampler=sampler
     )
 
     if params == "env":
@@ -63,26 +63,26 @@ def tune(
         for k, v in params_dict.items():
             print(f"   - {k}: {v}")
 
-    if n_jobs == 1:
+    if jobs == 1:
         tune_local(
-            study_name=study_name,
-            n_epochs=n_epochs,
+            study_name=study,
+            n_epochs=epochs,
             data=data,
-            n_trials=n_trials_per_job,
+            n_trials=trials,
             params_dict=params_dict,
             verbose=verbose,
         )
     else:
         cmd = ["ampopt", "tune-local"]
-        cmd += ["--study-name", study_name]
+        cmd += ["--study", study]
         cmd += ["--data", data]
-        cmd += ["--n-trials", str(n_trials_per_job)]
-        cmd += ["--n-epochs", str(n_epochs)]
+        cmd += ["--trials", str(trials)]
+        cmd += ["--epochs", str(epochs)]
         if params_dict:
             cmd += ["--params", format_params(**params_dict)]
         if verbose:
             cmd.append("--verbose")
-        for i in range(n_jobs):
+        for i in range(jobs):
             subprocess.Popen(cmd, env={**os.environ, "CUDA_VISIBLE_DEVICES": str(i)})
 
 

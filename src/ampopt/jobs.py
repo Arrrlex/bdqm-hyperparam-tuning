@@ -12,25 +12,25 @@ from ampopt.utils import ampopt_path, parse_params
 
 
 def run_pace_tuning_job(
-    study_name: str,
+    study: str,
     data="data/oc20_3k_train.lmdb",
-    n_trials_per_job: int = 10,
+    trials: int = 10,
     pruner: str = "Median",
     sampler: str = "CmaEs",
     params: str = "",
-    n_epochs: int = 100,
+    epochs: int = 100,
 ):
     ensure_mysql_running()
     params_dict = parse_params(params, prefix="param_")
 
     queue_job(
         "tune-amptorch-hyperparams",
-        n_trials_per_job=n_trials_per_job,
+        trials=trials,
         data=data,
-        study_name=study_name,
+        study=study,
         pruner=pruner,
         sampler=sampler,
-        n_epochs=n_epochs,
+        epochs=epochs,
         **params_dict,
     )
 

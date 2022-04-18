@@ -8,7 +8,7 @@ from amptorch.trainer import AtomsTrainer
 from optuna.integration.skorch import SkorchPruningCallback
 from torch import nn
 
-from ampopt.utils import num_gpus
+from ampopt.utils import num_gpus, absolute
 
 warnings.simplefilter("ignore")
 
@@ -39,6 +39,7 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
 
 
 def mk_objective(verbose, epochs, train_fname, **params):
+    train_path = absolute(train_fname, root="cwd")
     def objective(trial):
         get = partial(get_param_dict, params, trial)
         identifier = str(uuid4())
@@ -68,7 +69,7 @@ def mk_objective(verbose, epochs, train_fname, **params):
                 "epochs": epochs,
             },
             "dataset": {
-                "lmdb_path": [train_fname],
+                "lmdb_path": [train_path],
                 "cache": "full",
                 "val_split": 0.1,
             },

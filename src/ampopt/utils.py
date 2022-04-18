@@ -51,3 +51,22 @@ def parse_params(param_string, prefix="") -> Dict[str, Any]:
 
 def format_params(**params):
     return ",".join(f"{k}={v}" for k,v in sorted(params.items()))
+
+def absolute(relpath, root="cwd"):
+    """
+    Return absolute path as a string.
+
+    If `root="cwd"`, return the path relative to the current working directory.
+
+    If `root="proj"`, return the path relative to the project root
+    (`bdqm-hyperparam-tuning`).
+    """
+
+    if root == "cwd":
+        root_path = Path.cwd()
+    elif root == "proj":
+        root_path = ampopt_path
+    else:
+        raise Exception(f"root={root} not allowed; must be cwd or proj")
+
+    return str(root_path / relpath)
