@@ -50,9 +50,11 @@ def mk_objective(verbose, epochs, train_fname, valid_fname, **params):
     valid_lmdb_path = get_lmdb_path(valid_path)
 
     if verbose:
-        print("Loading validation data...")
+        print("Loading validation data labels...")
     y_true = [a.get_potential_energy() for a in read_data(valid_path)]
-    test_data = get_lmdb_dataset(valid_lmdb_path)
+    if verbose:
+        print("Loading validation LMDB...")
+    test_data = get_lmdb_dataset([valid_lmdb_path], cache_type="full")
 
     def objective(trial):
         get = partial(get_param_dict, params, trial)

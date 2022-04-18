@@ -16,5 +16,6 @@ ampopt tune \
   --study=$study \
   --pruner=$pruner --sampler=$sampler \
   --epochs=$epochs \
-  --data=$data \
+  --train=$train \
+  --valid=$valid \
   --params=env

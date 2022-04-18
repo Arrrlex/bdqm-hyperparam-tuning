@@ -13,7 +13,8 @@ from ampopt.utils import ampopt_path, parse_params
 
 def run_pace_tuning_job(
     study: str,
-    data="data/oc20_3k_train.lmdb",
+    train="data/oc20_3k_train.lmdb",
+    valid="data/oc20_300_valid.traj",
     trials: int = 10,
     pruner: str = "Median",
     sampler: str = "CmaEs",
@@ -26,7 +27,8 @@ def run_pace_tuning_job(
     queue_job(
         "tune-amptorch-hyperparams",
         trials=trials,
-        data=data,
+        train=train,
+        valid=valid,
         study=study,
         pruner=pruner,
         sampler=sampler,
