@@ -9,10 +9,10 @@ from ampopt.utils import (absolute, format_params, is_login_node, num_gpus,
 
 
 def tune(
+    trials: int,
+    study: str,
+    data: str,
     jobs: int = 1,
-    trials: int = 10,
-    study: str = None,
-    data: str = "oc20_3k_train.lmdb",
     pruner: str = "Median",
     sampler: str = "CmaEs",
     epochs: int = 100,
@@ -29,11 +29,6 @@ def tune(
         print("Aborting")
         return
 
-    if study is None:
-        print("study_name must be provided")
-        print("Aborting")
-        return
-
     if 0 < num_gpus() < jobs:
         print(
             f"Warning: running {jobs} jobs with only {num_gpus()} GPUs, trouble ahead"
@@ -46,6 +41,8 @@ def tune(
     print(f" - sampler: {sampler}")
     print(f" - pruner: {pruner}")
     print(f" - num epochs: {epochs}")
+
+    data = absolute(data, root="cwd")
 
     _ = get_or_create_study(study_name=study, pruner=pruner, sampler=sampler)
 

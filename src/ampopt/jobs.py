@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from ampopt.utils import ampopt_path, parse_params
+from ampopt.utils import ampopt_path, parse_params, absolute
 
 
 def run_pace_tuning_job(
     study: str,
-    data="data/oc20_3k_train.lmdb",
-    trials: int = 10,
+    data: str,
+    trials: int,
     pruner: str = "Median",
     sampler: str = "CmaEs",
     params: str = "",
@@ -22,6 +22,8 @@ def run_pace_tuning_job(
 ):
     ensure_mysql_running()
     params_dict = parse_params(params, prefix="param_")
+
+    data = absolute(data, root="cwd")
 
     queue_job(
         "tune-amptorch-hyperparams",
