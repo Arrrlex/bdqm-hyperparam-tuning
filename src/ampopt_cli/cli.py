@@ -42,9 +42,7 @@ def tune(
     trials: int = typer.Option(
         ..., help="number of trials (num of models to train) per job"
     ),
-    study: str = typer.Option(
-        ..., help="name of the study"
-    ),
+    study: str = typer.Option(..., help="name of the study"),
     data: str = typer.Option(..., help="Train dataset"),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
@@ -109,9 +107,7 @@ def tune(
 def run_pace_tuning_job(
     study: str = typer.Option(..., help="name of the study"),
     data: str = typer.Option(..., help="Train dataset"),
-    trials: int = typer.Option(
-        ..., help="number of trials (num of models to train)"
-    ),
+    trials: int = typer.Option(..., help="number of trials (num of models to train)"),
     pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     epochs: int = typer.Option(100, help="number of epochs for each trial"),
@@ -154,6 +150,7 @@ def run_pace_tuning_job(
         epochs=epochs,
     )
 
+
 @app.command()
 def tune_local(
     study: str = typer.Option(...),
@@ -167,8 +164,14 @@ def tune_local(
     from ampopt.tuning import tune_local
     from ampopt.utils import parse_params
 
-    tune_local(study_name=study, data=data, n_trials=trials, n_epochs=epochs,
-    params_dict=parse_params(params), verbose=verbose)
+    tune_local(
+        study_name=study,
+        data=data,
+        n_trials=trials,
+        n_epochs=epochs,
+        params_dict=parse_params(params),
+        verbose=verbose,
+    )
 
 
 # Utilities

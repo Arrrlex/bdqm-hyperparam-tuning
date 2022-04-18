@@ -9,7 +9,7 @@ from optuna.integration.skorch import SkorchPruningCallback
 from optuna.trial import FixedTrial
 from torch import nn
 
-from ampopt.utils import num_gpus, absolute
+from ampopt.utils import absolute, num_gpus
 
 warnings.simplefilter("ignore")
 
@@ -41,6 +41,7 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
 
 def mk_objective(verbose, epochs, train_fname, **params):
     train_path = absolute(train_fname, root="cwd")
+
     def objective(trial):
         get = partial(get_param_dict, params, trial)
         identifier = str(uuid4())
@@ -61,8 +62,8 @@ def mk_objective(verbose, epochs, train_fname, **params):
                 "scheduler": {
                     "policy": "StepLR",
                     "params": {
-                        'step_size': 100,
-                        **get("gamma", 0.1, 1.),
+                        "step_size": 100,
+                        **get("gamma", 0.1, 1.0),
                     },
                 },
                 "batch_size": 256,
@@ -95,9 +96,11 @@ def mk_objective(verbose, epochs, train_fname, **params):
 
     return objective
 
+
 def eval_score(epochs, train_fname, **params):
     objective = mk_objective(verbose=True, epochs=epochs, train_fname=train_fname)
     return objective(FixedTrial(params))
+
 
 def clean_up_checkpoints(identifier):
     for path in Path("checkpoints").glob(f"*{identifier}*"):

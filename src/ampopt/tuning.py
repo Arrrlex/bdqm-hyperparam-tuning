@@ -1,12 +1,11 @@
-from typing import Any, Dict
-
-import subprocess
 import os
+import subprocess
+from typing import Any, Dict
 
 from ampopt.study import get_or_create_study, get_study
 from ampopt.train import mk_objective
-from ampopt.utils import (is_login_node, num_gpus, parse_params,
-                          read_params_from_env, format_params, absolute)
+from ampopt.utils import (absolute, format_params, is_login_node, num_gpus,
+                          parse_params, read_params_from_env)
 
 
 def tune(
@@ -48,9 +47,7 @@ def tune(
     print(f" - pruner: {pruner}")
     print(f" - num epochs: {epochs}")
 
-    _ = get_or_create_study(
-        study_name=study, pruner=pruner, sampler=sampler
-    )
+    _ = get_or_create_study(study_name=study, pruner=pruner, sampler=sampler)
 
     if params == "env":
         print("Reading params from env")

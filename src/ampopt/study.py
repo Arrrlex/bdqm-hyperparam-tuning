@@ -1,10 +1,11 @@
 from functools import lru_cache
 
 import optuna
-from optuna import visualization as viz
-from optuna.samplers import TPESampler, CmaEsSampler, GridSampler, RandomSampler
-from optuna.pruners import HyperbandPruner, MedianPruner, NopPruner
 from dotenv import dotenv_values
+from optuna import visualization as viz
+from optuna.pruners import HyperbandPruner, MedianPruner, NopPruner
+from optuna.samplers import (CmaEsSampler, GridSampler, RandomSampler,
+                             TPESampler)
 
 from ampopt.utils import ampopt_path
 
@@ -43,7 +44,9 @@ def get_or_create_study(study_name: str, sampler: str, pruner: str):
         "CmaEs": CmaEsSampler(n_startup_trials=10),
         "TPE": TPESampler(n_startup_trials=40),
         "Random": RandomSampler(),
-        "Grid": GridSampler(search_space={"num_layers": range(3, 9), "num_nodes": range(4, 16)}),
+        "Grid": GridSampler(
+            search_space={"num_layers": range(3, 9), "num_nodes": range(4, 16)}
+        ),
     }
 
     pruners = {
@@ -88,19 +91,14 @@ def generate_report(study_name: str):
     study = get_study(study_name)
 
     viz.plot_contour(study, params=["num_layers", "num_nodes"]).write_image(
-        report_dir / "contour_plot.png")
-
-    viz.plot_intermediate_values(study).write_image(
-        report_dir / "intermediate.png"
+        report_dir / "contour_plot.png"
     )
 
-    viz.plot_optimization_history(study).write_image(
-        report_dir / "history.png"
-    )
+    viz.plot_intermediate_values(study).write_image(report_dir / "intermediate.png")
 
-    viz.plot_param_importances(study).write_image(
-        report_dir / "param_importance.png"
-    )
+    viz.plot_optimization_history(study).write_image(report_dir / "history.png")
+
+    viz.plot_param_importances(study).write_image(report_dir / "param_importance.png")
 
     print(f"Best params: {study.best_params} with MAE {study.best_value}")
     print(f"Report saved to {report_dir}")

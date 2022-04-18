@@ -49,8 +49,10 @@ def parse_params(param_string, prefix="") -> Dict[str, Any]:
         params[prefix + k] = _cast(v)
     return params
 
+
 def format_params(**params):
-    return ",".join(f"{k}={v}" for k,v in sorted(params.items()))
+    return ",".join(f"{k}={v}" for k, v in sorted(params.items()))
+
 
 def absolute(relpath, root="cwd"):
     """

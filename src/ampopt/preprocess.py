@@ -9,23 +9,25 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
+import ase.io
 import lmdb
 import torch
 from amptorch.descriptor.GMP import GMP
 from amptorch.preprocessing import AtomsToData, FeatureScaler, TargetScaler
 from ase import Atoms
-import ase.io
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from tqdm.contrib import tenumerate
 
-from ampopt.utils import ampopt_path, absolute
+from ampopt.utils import absolute, ampopt_path
+
 
 def read_data(fname):
-    if fname.endswith('.traj'):
+    if fname.endswith(".traj"):
         return ase.io.Trajectory(fname)
     else:
-        return ase.io.read(fname, ':')
+        return ase.io.read(fname, ":")
+
 
 def compute_gmp(
     train: str,
