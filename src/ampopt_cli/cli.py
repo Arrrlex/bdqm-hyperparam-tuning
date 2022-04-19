@@ -44,7 +44,7 @@ def tune(
     ),
     study: str = typer.Option(..., help="name of the study"),
     data: str = typer.Option(..., help="Train dataset"),
-    pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
+    pruner: str = typer.Option("Hyperband", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     verbose: bool = typer.Option(
         False, help="Whether or not to log the per-epoch results"
@@ -108,7 +108,7 @@ def run_pace_tuning_job(
     study: str = typer.Option(..., help="name of the study"),
     data: str = typer.Option(..., help="Train dataset"),
     trials: int = typer.Option(..., help="number of trials (num of models to train)"),
-    pruner: str = typer.Option("Median", help="which pruning algorithm to use"),
+    pruner: str = typer.Option("Hyperband", help="which pruning algorithm to use"),
     sampler: str = typer.Option("CmaEs", help="which sampling algorithm to use"),
     epochs: int = typer.Option(100, help="number of epochs for each trial"),
     params: str = typer.Option("", help="comma-separated list of key=value HP pairs"),

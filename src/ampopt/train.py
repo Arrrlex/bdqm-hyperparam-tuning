@@ -74,7 +74,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
                 "scheduler": {
                     "policy": "StepLR",
                     "params": {
-                        "step_size": 100,
+                        "step_size": 20,
                         **get("gamma", 0.1, 1.0),
                     },
                 },

@@ -13,7 +13,7 @@ def tune(
     study: str,
     data: str,
     jobs: int = 1,
-    pruner: str = "Median",
+    pruner: str = "Hyperband",
     sampler: str = "CmaEs",
     epochs: int = 100,
     params: str = "",
