@@ -93,4 +93,6 @@ def tune_local(
     objective = mk_objective(
         verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict
     )
+    print(study.sampler)
+    print(study.pruner)
     study.optimize(objective, n_trials=n_trials)
