@@ -69,7 +69,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
 
     default_params = {
         "step_size": 20,
-        "batch_size": 1024,
+        "batch_size": 256,
     }
 
     for param, val in default_params.items():
