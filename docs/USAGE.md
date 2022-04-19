@@ -25,6 +25,11 @@ All(ish) functionality is exposed via both Python and Command-Line interfaces.
 
 (I haven't yet exposed functionality for running a single trial over cmdline).
 
+**Note:** also check out the tutorial notebooks:
+
+- [Tutorial PACE](../notebooks/Tutorial%20PACE.ipynb)
+- [Tutorial Non-PACE](../notebooks/Tutorial%20Non-PACE.ipynb)
+
 ## Preprocessing Data<a name="preprocessing-data"></a>
 
 In order to run a hyperparameter optimization job, AmpOpt requires data to be
