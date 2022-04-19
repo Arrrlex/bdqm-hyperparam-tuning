@@ -14,7 +14,8 @@ ampopt tune \
   --jobs=1 \
   --trials=$trials \
   --study=$study \
-  --pruner=$pruner --sampler=$sampler \
+  --pruner=$pruner \
+  --sampler=$sampler \
   --epochs=$epochs \
   --data=$data \
   --params=env
