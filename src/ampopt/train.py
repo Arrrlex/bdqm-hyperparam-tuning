@@ -92,7 +92,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
                 "name": "singlenn",
                 "get_forces": False,
                 "dropout": 1,
-                **get("dropout_rate", 0.0, 1.0),
+                **get("dropout_rate", 0.0, 0.2),
                 "initialization": "xavier",
                 "activation": nn.Tanh,
             },
@@ -103,7 +103,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
                     "policy": "StepLR",
                     "params": {
                         **get("step_size"),
-                        **get("gamma", 0.1, 1.0),
+                        **get("gamma", 0.5, 1.0),
                     },
                 },
                 **get("batch_size"),
