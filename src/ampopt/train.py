@@ -21,7 +21,7 @@ def get_lmdb_path(path):
     fname = f"{Path(path).stem}.lmdb"
     return str(ampopt_path / "data" / fname)
 
-def get_param_dict(params, trial, name, low, *args, **kwargs):
+def get_param_dict(params, trial, name, *args, **kwargs):
     """
     Get value of parameter as dictionary, either from params dictionary or from trial.
 
@@ -37,15 +37,43 @@ def get_param_dict(params, trial, name, low, *args, **kwargs):
     try:
         val = params[name]
     except KeyError:
+        try:
+            low = kwargs["low"]
+        except KeyError:
+            low = args[0]
         param_type = type(low).__name__
         method = getattr(trial, f"suggest_{param_type}")
-        val = method(name, low, *args, **kwargs)
+        val = method(name, *args, **kwargs)
 
     return {name: val}
 
 
 def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
+    """
+    **params can contain the following hyperparameters:
+
+    - num_layers
+    - num_nodes
+    - dropout_rate
+    - lr
+    - step_size
+    - batch_size
+
+    If any of num_layers, num_nodes, dropout_rate or lr are not specified, then they
+    will be searched over.
+
+    If any of step_size or batch_size are not specified, they will be filled with
+    default values.
+    """
     train_path = absolute(train_fname, root="cwd")
+
+    default_params = {
+        "step_size": 20,
+        "batch_size": 1024,
+    }
+
+    for param, val in default_params.items():
+        params[param] = params.get(param, val)
 
     if valid_fname is not None:
         valid_path = absolute(valid_fname, root="cwd")
@@ -74,11 +102,11 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
                 "scheduler": {
                     "policy": "StepLR",
                     "params": {
-                        "step_size": 20,
+                        **get("step_size"),
                         **get("gamma", 0.1, 1.0),
                     },
                 },
-                "batch_size": 256,
+                **get("batch_size"),
                 "loss": "mae",
                 "epochs": epochs,
             },
