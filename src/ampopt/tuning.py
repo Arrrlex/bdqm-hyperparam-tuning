@@ -43,8 +43,8 @@ def tune(
     print(f" - num epochs: {epochs}")
 
     data = absolute(data, root="cwd")
-
-    study = get_or_create_study(study_name=study, pruner=pruner, sampler=sampler)
+    study_name = study
+    study = get_or_create_study(study_name=study_name, pruner=pruner, sampler=sampler)
 
     if params == "env":
         print("Reading params from env")
@@ -68,16 +68,16 @@ def tune(
         )
     else:
         cmd = ["ampopt", "tune-local"]
-        cmd += ["--study-name", study]
+        cmd += ["--study-name", study_name]
         cmd += ["--data", data]
         cmd += ["--trials", str(trials)]
         cmd += ["--epochs", str(epochs)]
         cmd += ["--pruner", pruner]
         cmd += ["--sampler", sampler]
+        cmd += ["--verbose" if verbose else "--no-verbose"]
         if params_dict:
             cmd += ["--params", format_params(**params_dict)]
-        if verbose:
-            cmd.append("--verbose")
+
         for i in range(jobs):
             subprocess.Popen(cmd, env={**os.environ, "CUDA_VISIBLE_DEVICES": str(i)})
 
