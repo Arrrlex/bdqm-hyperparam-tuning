@@ -159,10 +159,15 @@ def tune_local(
     epochs: int = typer.Option(...),
     params: str = typer.Option(""),
     verbose: bool = typer.Option(...),
+    sampler: str = typer.Option(...),
+    pruner: str = typer.Option(...),
 ):
     """For internal use only."""
     from ampopt.tuning import tune_local
     from ampopt.utils import parse_params
+    from ampopt.study import get_or_create_study
+
+    study = get_or_create_study(study_name=study, sampler=sampler, pruner=pruner)
 
     tune_local(
         study_name=study,
@@ -171,6 +176,7 @@ def tune_local(
         n_epochs=epochs,
         params_dict=parse_params(params),
         verbose=verbose,
+        study=study,
     )
 
 

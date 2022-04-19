@@ -44,7 +44,7 @@ def tune(
 
     data = absolute(data, root="cwd")
 
-    _ = get_or_create_study(study_name=study, pruner=pruner, sampler=sampler)
+    study = get_or_create_study(study_name=study, pruner=pruner, sampler=sampler)
 
     if params == "env":
         print("Reading params from env")
@@ -65,6 +65,7 @@ def tune(
             n_trials=trials,
             params_dict=params_dict,
             verbose=verbose,
+            study=study,
         )
     else:
         cmd = ["ampopt", "tune-local"]
@@ -72,6 +73,8 @@ def tune(
         cmd += ["--data", data]
         cmd += ["--trials", str(trials)]
         cmd += ["--epochs", str(epochs)]
+        cmd += ["--pruner", pruner]
+        cmd += ["--sampler", sampler]
         if params_dict:
             cmd += ["--params", format_params(**params_dict)]
         if verbose:
@@ -81,14 +84,13 @@ def tune(
 
 
 def tune_local(
-    study_name: str,
     n_epochs: int,
     data: str,
     n_trials: int,
     params_dict: Dict[str, Any],
     verbose: bool,
+    study,
 ):
-    study = get_study(study_name=study_name)
     objective = mk_objective(
         verbose=verbose, epochs=n_epochs, train_fname=data, **params_dict
     )
