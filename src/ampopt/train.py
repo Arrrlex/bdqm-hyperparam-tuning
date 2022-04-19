@@ -59,8 +59,8 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
         identifier = str(uuid4())
         config = {
             "model": {
-                **get("num_layers", 3, 8),
-                **get("num_nodes", 4, 15),
+                **get("num_layers", 6, 20),
+                **get("num_nodes", 10, 30),
                 "name": "singlenn",
                 "get_forces": False,
                 "dropout": 1,
