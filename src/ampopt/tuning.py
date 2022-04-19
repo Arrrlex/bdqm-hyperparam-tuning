@@ -59,7 +59,6 @@ def tune(
 
     if jobs == 1:
         tune_local(
-            study_name=study,
             n_epochs=epochs,
             data=data,
             n_trials=trials,
@@ -69,7 +68,7 @@ def tune(
         )
     else:
         cmd = ["ampopt", "tune-local"]
-        cmd += ["--study", study]
+        cmd += ["--study-name", study]
         cmd += ["--data", data]
         cmd += ["--trials", str(trials)]
         cmd += ["--epochs", str(epochs)]

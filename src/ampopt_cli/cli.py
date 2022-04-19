@@ -153,7 +153,7 @@ def run_pace_tuning_job(
 
 @app.command()
 def tune_local(
-    study: str = typer.Option(...),
+    study_name: str = typer.Option(...),
     data: str = typer.Option(...),
     trials: int = typer.Option(...),
     epochs: int = typer.Option(...),
@@ -167,10 +167,9 @@ def tune_local(
     from ampopt.utils import parse_params
     from ampopt.study import get_or_create_study
 
-    study = get_or_create_study(study_name=study, sampler=sampler, pruner=pruner)
+    study = get_or_create_study(study_name=study_name, sampler=sampler, pruner=pruner)
 
     tune_local(
-        study_name=study,
         data=data,
         n_trials=trials,
         n_epochs=epochs,
