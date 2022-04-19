@@ -37,4 +37,12 @@ For setup and installation instructions, please refer to [SETUP.md](docs/SETUP.m
 
 ## Usage<a name="usage"></a>
 
-For usage instructions, please refer to [USAGE.md](docs/USAGE.md).
+For notebook tutorials, see:
+- [Tutorial PACE](notebooks/Tutorial%20PACE.ipynb)
+- [Tutorial Non-PACE](notebooks/Tutorial%20Non-PACE.ipynb)
+
+For more comprehensive (but drier) instructions, please refer to
+[USAGE.md](docs/USAGE.md).
+
+Finally, for full explanation of all options, see `ampopt --help` or
+`ampopt <command> --help`.
