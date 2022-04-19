@@ -132,7 +132,7 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
         if valid_fname is not None:
             if verbose:
                 print("Calculating predictions on validation data...")
-            y_pred = trainer.predict_from_feats(valid_data, disable_tqdm=not verbose)["energy"]
+            y_pred = trainer.predict(valid_data, disable_tqdm=not verbose)["energy"]
 
             score = mean_absolute_error(y_valid, y_pred)
         else:
@@ -146,8 +146,14 @@ def mk_objective(verbose, epochs, train_fname, valid_fname=None, **params):
 
 
 def eval_score(epochs, train_fname, valid_fname=None, **params):
-    objective = mk_objective(verbose=True, epochs=epochs, train_fname=train_fname, valid_fname=valid_fname)
-    return objective(FixedTrial(params))
+    objective = mk_objective(
+        verbose=True,
+        epochs=epochs,
+        train_fname=train_fname,
+        valid_fname=valid_fname,
+        **params,
+    )
+    return objective(FixedTrial({}))
 
 
 def clean_up_checkpoints(identifier):
